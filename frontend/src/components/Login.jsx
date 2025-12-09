@@ -18,7 +18,7 @@ function Login() {
         
         {/*LOGO COMBO*/}
         <div className="flex flex-col items-center mb-6 sm:mb-8 space-y-3">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 bg-black p-2 border border-zinc-600 rounded-lg">
             <img src={logoIcon} alt="ReportMitra" className="h-12 sm:h-16 object-contain" />
             <img src={logoText} alt="ReportMitra" className="h-7 sm:h-10 object-contain" />
           </div>
