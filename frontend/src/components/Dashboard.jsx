@@ -51,9 +51,7 @@ function DashboardHome() {
     navigate("/");
   };
 
-  const activePage =
-    navItems.find((item) => location.pathname.endsWith(item.to))?.label ||
-    "Dashboard";
+  
 
   return (
     <div className="max-w-4xl mx-auto">
