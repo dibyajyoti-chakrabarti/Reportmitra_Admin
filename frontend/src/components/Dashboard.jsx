@@ -1,12 +1,100 @@
 // Dashboard.jsx
-import {
-  NavLink,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MonitorX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import {
+  LayoutDashboard,
+  ListChecks,
+  AlertTriangle,
+  User,
+  History,
+  UserPlus,
+} from "lucide-react";
+
+// Homepage prompt when no section is selected
+function DashboardHome() {
+  const cards = [
+    {
+      title: "Issue List",
+      desc: "View, filter and manage all reported issues.",
+      icon: ListChecks,
+      link: "issues",
+    },
+    {
+      title: "Urgent Issues",
+      desc: "Handle priority flagged problems immediately.",
+      icon: AlertTriangle,
+      link: "urgent",
+    },
+    {
+      title: "Profile",
+      desc: "View your admin details and settings.",
+      icon: User,
+      link: "profile",
+    },
+    {
+      title: "Issue History",
+      desc: "Track resolved and archived reports.",
+      icon: History,
+      link: "history",
+    },
+    {
+      title: "Account Creation",
+      desc: "Create new admin or department accounts.",
+      icon: UserPlus,
+      link: "create",
+    },
+  ];
+
+  const handleLogout = () => {
+    // TODO: clear auth, tokens, etc.
+    navigate("/");
+  };
+
+  const activePage =
+    navItems.find((item) => location.pathname.endsWith(item.to))?.label ||
+    "Dashboard";
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center gap-3 mb-8">
+        <LayoutDashboard className="w-7 h-7 text-zinc-700" />
+        <h1 className="text-2xl font-semibold">
+          Welcome to the Admin Dashboard
+        </h1>
+      </div>
+
+      <p className="text-zinc-600 mb-6">
+        Choose a task from the left menu or click one of the quick shortcuts
+        below.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {cards.map((item, idx) => (
+          <CardButton key={idx} {...item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Reusable card button
+function CardButton({ title, desc, icon: Icon, link }) {
+  const navigate = useNavigate();
+
+  return (
+    <button
+      onClick={() => navigate(link)}
+      className="w-full text-left p-5 rounded-xl border border-zinc-300 bg-white hover:bg-zinc-100 transition flex items-start gap-4 shadow-sm"
+    >
+      <Icon className="w-8 h-8 text-black" />
+      <div>
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="text-sm text-zinc-600">{desc}</p>
+      </div>
+    </button>
+  );
+}
 
 function Dashboard() {
   const location = useLocation();
@@ -21,10 +109,7 @@ function Dashboard() {
       if (!isResizingRef.current) return;
       const minWidth = 220;
       const maxWidth = 420;
-      const newWidth = Math.min(
-        maxWidth,
-        Math.max(minWidth, e.clientX)
-      );
+      const newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX));
       setSidebarWidth(newWidth);
     };
 
@@ -55,8 +140,15 @@ function Dashboard() {
   ];
 
   const handleLogout = () => {
-    // TODO: clear auth, tokens, etc.
-    navigate("/");
+    // Clear all authentication tokens
+    localStorage.removeItem("rm_access");
+    localStorage.removeItem("rm_refresh");
+
+    // (Optional) If you ever store user info:
+    // localStorage.removeItem("rm_user");
+
+    // Redirect to login page
+    navigate("/", { replace: true });
   };
 
   const activePage =
@@ -91,9 +183,7 @@ function Dashboard() {
               <p className="text-sm font-semibold tracking-wide">
                 {user.userId}
               </p>
-              <p className="text-sm font-semibold uppercase">
-                {user.fullName}
-              </p>
+              <p className="text-sm font-semibold uppercase">{user.fullName}</p>
               <p className="text-xs text-zinc-400 uppercase tracking-wide">
                 {user.department}
               </p>
@@ -158,7 +248,11 @@ function Dashboard() {
 
           {/* 🔳 Outlet – always white and auto-resizing with sidebar */}
           <main className="flex-1 overflow-y-auto bg-white text-black p-6 lg:p-8">
-            <Outlet />
+            {location.pathname === "/dashboard" ? (
+              <DashboardHome />
+            ) : (
+              <Outlet />
+            )}
           </main>
         </div>
       </div>
