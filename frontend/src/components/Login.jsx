@@ -6,12 +6,19 @@ import logoText from "../assets/logo-2.png";
 /**
  * Login: posts { userid, password } to /api/token/
  * On success: saves access/refresh in localStorage and navigates to /dashboard
+ *
+ * This file includes mobile/low-res blocking: if viewport width < MIN_WIDTH,
+ * we show a full-screen message and prevent using the login form on small screens.
  */
+
+const MIN_WIDTH = 900; // same threshold used in Dashboard for low-res blocking
+
 export default function Login() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
 
   // If already logged in, go to dashboard
@@ -19,6 +26,16 @@ export default function Login() {
     const access = localStorage.getItem("rm_access");
     if (access) navigate("/dashboard", { replace: true });
   }, [navigate]);
+
+  // detect small screens and react to resizes
+  useEffect(() => {
+    function check() {
+      setIsMobile(window.innerWidth < MIN_WIDTH);
+    }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -91,6 +108,33 @@ export default function Login() {
     }
   };
 
+  // If small screen, show blocking overlay (same UX pattern as Dashboard)
+  if (isMobile) {
+    return (
+      <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-6 sm:py-10">
+        <div className="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl px-6 py-8 text-center text-white">
+          <h2 className="text-xl font-semibold mb-3">Screen too small</h2>
+          <p className="text-zinc-300 mb-4">
+            The admin panel is not supported on small screens. Please use a tablet or desktop (width ≥ {MIN_WIDTH}px).
+          </p>
+          <p className="text-sm text-zinc-400 mb-6">If you need access from a mobile device for testing, open this page on a laptop or increase your browser window size.</p>
+          <div className="flex justify-center">
+            <button
+              onClick={() => {
+                // helpful for developers: re-check in case of orientation change or emulator
+                setIsMobile(window.innerWidth < MIN_WIDTH);
+              }}
+              className="px-4 py-2 rounded-md bg-white text-black font-medium"
+            >
+              Re-check screen size
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal login UI
   return (
     <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-6 sm:py-10">
       <div className="w-full max-w-sm sm:max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl px-5 py-6 sm:px-8 sm:py-8">
@@ -113,7 +157,7 @@ export default function Login() {
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
-              placeholder="rr0001"
+              placeholder="abc123"
               required
             />
           </div>
