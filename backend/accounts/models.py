@@ -1,0 +1,33 @@
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+class UserManager(BaseUserManager):
+    def create_user(self, userid, password=None, is_root=False, department="", **extra_fields):
+        if not userid:
+            raise ValueError("Users must have a userid")
+        user = self.model(userid=userid, is_root=is_root, department=department, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, userid, password, **extra_fields):
+        user = self.create_user(userid, password, is_root=True, **extra_fields)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+class User(AbstractBaseUser, PermissionsMixin):
+    userid = models.CharField(max_length=6, unique=True)    # six chars/numbers
+    department = models.CharField(max_length=100, blank=True)
+    is_root = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = "userid"
+    REQUIRED_FIELDS = []
+
+    def __str__(self):
+        return self.userid
