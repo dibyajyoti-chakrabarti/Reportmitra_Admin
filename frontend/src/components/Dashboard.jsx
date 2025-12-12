@@ -1,6 +1,5 @@
 // Dashboard.jsx
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { MonitorX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
@@ -9,77 +8,65 @@ import {
   User,
   History,
   UserPlus,
+  ArrowRightCircle,
+  BarChart4, // analytics icon (lucide)
 } from "lucide-react";
-
-// Homepage prompt when no section is selected
+import ScreenBlocker from "./ScreenBlocker";
 function DashboardHome() {
-  const cards = [
-    {
-      title: "Issue List",
-      desc: "View, filter and manage all reported issues.",
-      icon: ListChecks,
-      link: "issues",
-    },
-    {
-      title: "Urgent Issues",
-      desc: "Handle priority flagged problems immediately.",
-      icon: AlertTriangle,
-      link: "urgent",
-    },
-    {
-      title: "Profile",
-      desc: "View your admin details and settings.",
-      icon: User,
-      link: "profile",
-    },
-    {
-      title: "Issue History",
-      desc: "Track resolved and archived reports.",
-      icon: History,
-      link: "history",
-    },
-    {
-      title: "Account Creation",
-      desc: "Create new admin or department accounts.",
-      icon: UserPlus,
-      link: "create",
-    },
+  const features = [
+    { icon: ListChecks, label: "View & manage reported issues" },
+    { icon: AlertTriangle, label: "Handle urgent problems immediately" },
+    { icon: User, label: "View or update your profile" },
+    { icon: History, label: "Track issue history & workflow" },
+    { icon: UserPlus, label: "Create new department/admin accounts" },
+    { icon: BarChart4, label: "Reports & analytics" }, // 6th feature
   ];
 
-  const handleLogout = () => {
-    // TODO: clear auth, tokens, etc.
-    navigate("/");
-  };
-
-  
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <LayoutDashboard className="w-7 h-7 text-zinc-700" />
-        <h1 className="text-2xl font-semibold">
-          Welcome to the Admin Dashboard
-        </h1>
-      </div>
+    <div className="h-full flex items-center justify-center">
+      <div className="w-full max-w-4xl text-center px-6">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <LayoutDashboard className="w-12 h-12 text-zinc-700" />
+          <h1 className="text-4xl font-semibold">Admin Dashboard</h1>
+        </div>
 
-      <p className="text-zinc-600 mb-6">
-        Choose a task from the left menu or click one of the quick shortcuts
-        below.
-      </p>
+        <p className="text-zinc-600 mb-8 text-base">
+          Welcome — choose a task from the left navigation to begin.
+        </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {cards.map((item, idx) => (
-          <CardButton key={idx} {...item} />
-        ))}
+        <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-10 shadow-sm">
+          <h2 className="text-2xl font-medium mb-6 flex items-center justify-center gap-3">
+            <ArrowRightCircle className="w-6 h-6 text-zinc-700" />
+            Start your work
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto text-left">
+            {features.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition"
+                >
+                  <Icon className="w-8 h-8 text-black mt-1" />
+                  <p className="text-lg text-zinc-700 leading-snug">{item.label}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-zinc-500 mt-8">
+            This console helps administrators solve civic issues in Bangalore —
+            use the left panel to navigate through your tools.
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-// Reusable card button
 function CardButton({ title, desc, icon: Icon, link }) {
   const navigate = useNavigate();
-
   return (
     <button
       onClick={() => navigate(link)}
@@ -98,8 +85,8 @@ function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Resizable sidebar
-  const [sidebarWidth, setSidebarWidth] = useState(280); // default width (px)
+  // Sidebar width and resize
+  const [sidebarWidth, setSidebarWidth] = useState(300); // a bit wider
   const isResizingRef = useRef(false);
 
   useEffect(() => {
@@ -110,11 +97,9 @@ function Dashboard() {
       const newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX));
       setSidebarWidth(newWidth);
     };
-
     const handleMouseUp = () => {
       isResizingRef.current = false;
     };
-
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
     return () => {
@@ -129,23 +114,19 @@ function Dashboard() {
     department: "Public Works",
   };
 
+  // Added 6th nav item for symmetry
   const navItems = [
     { label: "Issue List", to: "issues" },
     { label: "Urgent Issues", to: "urgent" },
     { label: "Profile", to: "profile" },
     { label: "Issue History", to: "history" },
     { label: "Account Creation", to: "create" },
+    { label: "Reports & Analytics", to: "analytics" }, // new route - create a route/component
   ];
 
   const handleLogout = () => {
-    // Clear all authentication tokens
     localStorage.removeItem("rm_access");
     localStorage.removeItem("rm_refresh");
-
-    // (Optional) If you ever store user info:
-    // localStorage.removeItem("rm_user");
-
-    // Redirect to login page
     navigate("/", { replace: true });
   };
 
@@ -154,107 +135,84 @@ function Dashboard() {
     "Dashboard";
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* ❌ BLOCK MOBILE / SMALL SCREENS */}
-      <div className="md:hidden min-h-screen flex items-center justify-center px-6">
-        <div className="max-w-sm w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-6 flex flex-col items-center text-center space-y-4">
-          <MonitorX className="w-12 h-12" />
-          <h1 className="text-lg font-semibold">Screen Size Not Supported</h1>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            ReportMitra Admin Console is optimised for tablet and desktop
-            devices. Please switch to a larger screen or resize your window to
-            continue.
-          </p>
-        </div>
-      </div>
-
-      {/* ✅ MAIN LAYOUT (TABLET+ ONLY) */}
-      <div className="hidden md:flex min-h-screen bg-black text-white">
-        {/* SIDEBAR (RESIZABLE) */}
-        <aside
-          className="bg-zinc-950 border-r border-zinc-800 flex flex-col"
-          style={{ width: sidebarWidth }}
-        >
-          {/* Header text (no avatar now) */}
-          <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
-            <div className="space-y-1.5">
-              <p className="text-sm font-semibold tracking-wide">
-                {user.userId}
-              </p>
-              <p className="text-sm font-semibold uppercase">{user.fullName}</p>
-              <p className="text-xs text-zinc-400 uppercase tracking-wide">
-                {user.department}
-              </p>
-              <p className="mt-3 text-[0.7rem] text-zinc-400">
-                ReportMitra Admin Panel
-              </p>
-            </div>
+    // root: prevent page scrollbar by hiding overflow; inner areas manage overflow if needed
+    <>
+    <ScreenBlocker minWidth={1024} minHeight={700} allowBypass={false} />
+    <div className="min-h-screen overflow-hidden bg-black text-white flex">
+      {/* SIDEBAR */}
+      <aside
+        className="bg-zinc-950 border-r border-zinc-800 flex flex-col"
+        style={{ width: sidebarWidth }}
+      >
+        <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold tracking-wide">{user.userId}</p>
+            <p className="text-sm font-semibold uppercase">{user.fullName}</p>
+            <p className="text-xs text-zinc-400 uppercase tracking-wide">
+              {user.department}
+            </p>
+            <p className="mt-3 text-[0.7rem] text-zinc-400">ReportMitra Admin Panel</p>
           </div>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1 text-sm">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  [
-                    "block w-full px-4 py-3 border-b border-zinc-800 text-left font-semibold tracking-wide",
-                    "hover:bg-zinc-900 transition-colors",
-                    isActive ? "bg-zinc-900" : "bg-zinc-950",
-                  ].join(" ")
-                }
-                end
-              >
-                {item.label.toUpperCase()}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Logout */}
-          <div className="px-6 py-6 border-t border-zinc-800">
-            <button
-              onClick={handleLogout}
-              className="w-full py-2 text-sm font-medium rounded-md border border-zinc-600 bg-zinc-950 text-zinc-100 hover:bg-zinc-900 hover:border-zinc-400 transition-colors"
+        <nav className="flex-1 px-3 py-4 space-y-1 text-base overflow-y-auto">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                [
+                  "block w-full px-5 py-4 border-b border-zinc-800 text-left font-semibold",
+                  "hover:bg-zinc-900 transition-colors",
+                  isActive ? "bg-zinc-900" : "bg-zinc-950",
+                ].join(" ")
+              }
+              end
             >
-              Logout
-            </button>
-          </div>
-        </aside>
+              {item.label.toUpperCase()}
+            </NavLink>
+          ))}
+        </nav>
 
-        {/* RESIZER HANDLE */}
-        <div
-          className="w-[3px] cursor-col-resize bg-zinc-800 hover:bg-zinc-600 transition-colors"
-          onMouseDown={() => {
-            isResizingRef.current = true;
-          }}
-        />
-
-        {/* MAIN CONTENT (WHITE OUTLET AREA) */}
-        <div className="flex-1 flex flex-col bg-black">
-          {/* Top bar */}
-          <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-zinc-500">ReportMitra</span>
-              <span className="text-zinc-600">/</span>
-              <span className="font-semibold">{activePage}</span>
-            </div>
-            <span className="text-xs text-zinc-500">
-              Signed in as {user.userId}
-            </span>
-          </header>
-
-          {/* 🔳 Outlet – always white and auto-resizing with sidebar */}
-          <main className="flex-1 overflow-y-auto bg-white text-black p-6 lg:p-8">
-            {location.pathname === "/dashboard" ? (
-              <DashboardHome />
-            ) : (
-              <Outlet />
-            )}
-          </main>
+        <div className="px-6 py-6 border-t border-zinc-800">
+          <button
+            onClick={handleLogout}
+            className="w-full py-3 text-sm font-medium rounded-md border border-zinc-600 bg-zinc-950 text-zinc-100 hover:bg-zinc-900 hover:border-zinc-400 transition"
+          >
+            Logout
+          </button>
         </div>
+      </aside>
+
+      {/* RESIZER */}
+      <div
+        className="w-[4px] cursor-col-resize bg-zinc-800 hover:bg-zinc-600"
+        onMouseDown={() => {
+          isResizingRef.current = true;
+        }}
+      />
+
+      {/* MAIN CONTENT: fill remaining space; no top-level scrollbar */}
+      <div className="flex-1 flex flex-col">
+        <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-zinc-500">ReportMitra</span>
+            <span className="text-zinc-600">/</span>
+            <span className="font-semibold">{activePage}</span>
+          </div>
+          <span className="text-xs text-zinc-500">Signed in as {user.userId}</span>
+        </header>
+
+        {/* Main area: not producing page scrollbar; content centered and will scroll internally if needed */}
+        <main className="flex-1 h-full bg-white text-black p-6 lg:p-8 overflow-hidden">
+          {/* Inner scrollable area (only if inner content overflows) */}
+          <div className="h-full overflow-auto">
+            {location.pathname === "/dashboard" ? <DashboardHome /> : <Outlet />}
+          </div>
+        </main>
       </div>
     </div>
+    </>
   );
 }
 
