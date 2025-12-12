@@ -1,11 +1,18 @@
+# add to imports if needed
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 class UserManager(BaseUserManager):
-    def create_user(self, userid, password=None, is_root=False, department="", **extra_fields):
+    def create_user(self, userid, password=None, is_root=False, department="", full_name="", **extra_fields):
         if not userid:
             raise ValueError("Users must have a userid")
-        user = self.model(userid=userid, is_root=is_root, department=department, **extra_fields)
+        user = self.model(
+            userid=userid,
+            is_root=is_root,
+            department=department,
+            full_name=full_name,   # <-- set here
+            **extra_fields
+        )
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -18,11 +25,12 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser, PermissionsMixin):
-    userid = models.CharField(max_length=6, unique=True)    # six chars/numbers
+    userid = models.CharField(max_length=6, unique=True)
+    full_name = models.CharField(max_length=150, blank=True)   # <-- NEW field
     department = models.CharField(max_length=100, blank=True)
     is_root = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)  # keep this (recommended)
 
     objects = UserManager()
 
