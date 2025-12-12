@@ -60,3 +60,21 @@ export async function fetchWithAuth(url, opts = {}) {
   }
   return res;
 }
+
+// append to frontend/src/api.js (after fetchWithAuth)
+export async function getCurrentUser() {
+  // fetch the current authenticated user from backend endpoint /api/me/
+  const res = await fetchWithAuth("/api/me/", {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    // bubble an error with status + body for easier debugging
+    const text = await res.text().catch(() => "");
+    const err = new Error(`getCurrentUser failed: ${res.status} ${text}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
