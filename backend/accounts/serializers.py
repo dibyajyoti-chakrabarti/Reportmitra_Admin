@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,3 +22,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             department=validated_data.get("department",""),
             full_name=validated_data.get("full_name","")   # <-- pass full_name
         )
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("userid", "full_name", "department", "is_root", "is_staff")

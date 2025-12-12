@@ -108,11 +108,45 @@ function Dashboard() {
     };
   }, []);
 
-  const user = {
-    userId: "EMP-1023",
-    fullName: "Jane Doe",
-    department: "Public Works",
-  };
+    const [user, setUser] = useState({
+    userId: "",
+    fullName: "",
+    department: "",
+  });
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    // import helper and call getCurrentUser (uses fetchWithAuth, will refresh tokens if needed)
+    import("../api")
+      .then(({ getCurrentUser }) => {
+        return getCurrentUser()
+          .then((data) => {
+            if (!mounted) return;
+            setUser({
+              userId: data.userid || "",
+              fullName: data.full_name || data.userid || "",
+              department: data.department || "",
+            });
+          })
+          .catch((err) => {
+            console.error("Unable to fetch current user:", err);
+            // optional: handle 401 by redirecting to login if needed
+          })
+          .finally(() => {
+            if (mounted) setLoadingUser(false);
+          });
+      })
+      .catch((err) => {
+        console.error("Failed to load api helper:", err);
+        if (mounted) setLoadingUser(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
 
   // Added 6th nav item for symmetry
   const navItems = [
@@ -146,11 +180,16 @@ function Dashboard() {
       >
         <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
           <div className="space-y-1.5">
-            <p className="text-sm font-semibold tracking-wide">{user.userId}</p>
-            <p className="text-sm font-semibold uppercase">{user.fullName}</p>
-            <p className="text-xs text-zinc-400 uppercase tracking-wide">
-              {user.department}
-            </p>
+            <p className="text-sm font-semibold tracking-wide">
+  {loadingUser ? "..." : user.userId || "—"}
+</p>
+<p className="text-sm font-semibold uppercase">
+  {loadingUser ? "…" : (user.fullName || user.userId || "—")}
+</p>
+<p className="text-xs text-zinc-400 uppercase tracking-wide">
+  {loadingUser ? "" : (user.department || "")}
+</p>
+
             <p className="mt-3 text-[0.7rem] text-zinc-400">ReportMitra Admin Panel</p>
           </div>
         </div>
@@ -200,7 +239,7 @@ function Dashboard() {
             <span className="text-zinc-600">/</span>
             <span className="font-semibold">{activePage}</span>
           </div>
-          <span className="text-xs text-zinc-500">Signed in as {user.userId}</span>
+          <span className="text-xs text-zinc-500">Signed in as {loadingUser ? "..." : user.userId}</span>
         </header>
 
         {/* Main area: not producing page scrollbar; content centered and will scroll internally if needed */}
