@@ -1,4 +1,3 @@
-# add to imports if needed
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
