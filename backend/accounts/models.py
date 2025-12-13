@@ -9,7 +9,7 @@ class UserManager(BaseUserManager):
             userid=userid,
             is_root=is_root,
             department=department,
-            full_name=full_name,   # <-- set here
+            full_name=full_name,
             **extra_fields
         )
         user.set_password(password)
