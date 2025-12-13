@@ -10,14 +10,32 @@ import {
   UserPlus,
   ArrowRightCircle,
 } from "lucide-react";
+
 import ScreenBlocker from "./ScreenBlocker";
 function DashboardHome() {
-  const features = [
-    { icon: ListChecks, label: "View & manage reported issues" },
-    { icon: AlertTriangle, label: "Handle urgent problems immediately" },
-    { icon: User, label: "View or update your profile" },
-    { icon: History, label: "Track issue history & workflow" },
+  const navigate = useNavigate();
 
+  const features = [
+    {
+      icon: ListChecks,
+      label: "View & manage reported issues",
+      route: "issues",
+    },
+    {
+      icon: AlertTriangle,
+      label: "Handle urgent problems immediately",
+      route: "urgent",
+    },
+    {
+      icon: User,
+      label: "View or update your profile",
+      route: "profile",
+    },
+    {
+      icon: History,
+      label: "Track issue history & workflow",
+      route: "history",
+    },
   ];
 
   return (
@@ -41,18 +59,21 @@ function DashboardHome() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto text-left">
             {features.map((item, i) => {
               const Icon = item.icon;
+
               return (
                 <div
                   key={i}
-                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition"
+                  onClick={() => navigate(item.route)}
+                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition cursor-pointer"
                 >
                   <Icon className="w-8 h-8 text-black mt-1" />
-                  <p className="text-lg text-zinc-700 leading-snug">{item.label}</p>
+                  <p className="text-lg text-zinc-700 leading-snug">
+                    {item.label}
+                  </p>
                 </div>
               );
             })}
           </div>
-
         </div>
       </div>
     </div>
