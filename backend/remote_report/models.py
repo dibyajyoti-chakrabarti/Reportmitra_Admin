@@ -15,7 +15,7 @@ class IssueReportRemote(models.Model):
     allocated_to = models.CharField(max_length=255, null=True, blank=True)
     confidence_score = models.IntegerField(null=True, blank=True)
     department = models.CharField(max_length=255, null=True, blank=True)
-
+    completion_url = models.CharField(max_length=1000, null=True, blank=True)
     class Meta:
         managed = False
         db_table = "report_issuereport"
