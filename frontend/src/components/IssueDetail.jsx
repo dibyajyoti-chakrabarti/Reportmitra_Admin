@@ -44,23 +44,42 @@ const IssueDetail = () => {
     };
   }, [trackingId]);
 
-  const handleStatusChange = async (newStatus) => {
-    if (newStatus === issue.status) return;
+const handleStatusChange = async (newStatus) => {
+  if (!issue || newStatus === issue.status) return;
 
-    // RESOLVED → open modal
-    if (newStatus === "resolved") {
-      setShowResolveModal(true);
+  // UX guards
+  if (issue.status === "pending" && newStatus !== "in_progress") return;
+  if (issue.status === "in_progress" && newStatus === "pending") return;
+
+  // ✅ RESOLVED → modal flow
+  if (newStatus === "resolved") {
+    setShowResolveModal(true);
+    return;
+  }
+
+  try {
+    // ✅ ESCALATED → update + redirect
+    if (newStatus === "escalated") {
+      await updateIssueStatus(issue.tracking_id, "escalated");
+      navigate("/dashboard/issues"); // 🔥 force IssueList refresh
       return;
     }
 
-    try {
-      await updateIssueStatus(issue.tracking_id, newStatus);
-      setIssue({ ...issue, status: newStatus });
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update status");
-    }
-  };
+    // ✅ NORMAL transition (pending → in_progress)
+    const updated = await updateIssueStatus(
+      issue.tracking_id,
+      newStatus
+    );
+
+    setIssue({ ...issue, ...updated });
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Failed to update status");
+  }
+};
+
+
+
 
   const handleResolve = async () => {
     if (!file) {
@@ -150,11 +169,32 @@ const IssueDetail = () => {
               onChange={(e) => handleStatusChange(e.target.value)}
               className="border border-gray-300 rounded px-2 py-1 text-xs"
             >
-              <option value="pending">Pending</option>
-              <option value="in_progress">In Progress</option>
-              <option value="escalated">Escalated</option>
-              <option value="resolved">Resolved</option>
+                <option value="pending" disabled>
+                  Pending
+                </option>
+
+                <option
+                  value="in_progress"
+                  disabled={issue.status !== "pending"}
+                >
+                  In Progress
+                </option>
+
+                <option
+                  value="escalated"
+                  disabled={issue.status !== "in_progress"}
+                >
+                  Escalated
+                </option>
+
+              <option
+                value="resolved"
+                disabled={issue.status !== "in_progress"}
+              >
+                Resolved
+              </option>
             </select>
+
           )}
         </div>
         <div>
