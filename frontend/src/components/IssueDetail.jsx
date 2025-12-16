@@ -6,6 +6,7 @@ import {
   getPresignedUpload,
   resolveIssue,
 } from "../api";
+import { Camera } from "lucide-react";
 
 const IssueDetail = () => {
   const { trackingId } = useParams();
@@ -105,148 +106,210 @@ const IssueDetail = () => {
   if (!issue) return null;
 
   return (
-    <div className="max-w-5xl mx-auto bg-white rounded-lg shadow p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">{issue.issue_title}</h1>
-          <p className="text-sm text-gray-500">
-            Tracking ID: <span className="font-mono">{issue.tracking_id}</span>
-          </p>
-        </div>
+    <div className="flex justify-center">
+      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6 border-b pb-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {issue.issue_title}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              Tracking ID:{" "}
+              <span className="font-mono">{issue.tracking_id}</span>
+            </p>
+          </div>
 
-        <button
-          onClick={() => navigate(-1)}
-          className="text-sm px-3 py-1 border rounded hover:bg-gray-100"
-        >
-          ← Back
-        </button>
-      </div>
-
-      {/* Meta Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold">Status:</span>
-
-          {/* Status badge */}
-          <span
-            className={`px-2 py-1 rounded text-xs ${
-              issue.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : issue.status === "in_progress"
-                ? "bg-blue-100 text-blue-800"
-                : issue.status === "escalated"
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
+          <button
+            onClick={() => navigate(-1)}
+            className="text-sm px-3 py-1 border rounded hover:bg-gray-100"
           >
-            {issue.status.replace("_", " ")}
-          </span>
+            ← Back
+          </button>
+        </div>
 
-          {/* Status dropdown */}
-          {issue.status !== "resolved" && (
-            <select
-              value={issue.status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 text-xs"
+        {/* Meta Info */}
+        <div className="space-y-2 text-sm mb-6">
+          {/* Status row (unchanged, stays first) */}
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">Status:</span>
+
+            <span
+              className={`inline-flex items-center px-2 h-7 rounded text-xs font-medium ${
+                issue.status === "pending"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : issue.status === "in_progress"
+                  ? "bg-blue-100 text-blue-800"
+                  : issue.status === "escalated"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-green-100 text-green-800"
+              }`}
             >
-              <option value="pending">Pending</option>
-              <option value="in_progress">In Progress</option>
-              <option value="escalated">Escalated</option>
-              <option value="resolved">Resolved</option>
-            </select>
-          )}
-        </div>
-        <div>
-          <span className="font-semibold">Department:</span> {issue.department}
-        </div>
+              {issue.status.replace("_", " ")}
+            </span>
 
-        <div>
-          <span className="font-semibold">Location:</span> {issue.location}
-        </div>
-
-        <div>
-          <span className="font-semibold">Reported On:</span>{" "}
-          {new Date(issue.issue_date).toLocaleString()}
-        </div>
-
-      </div>
-
-      {/* Description */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Description</h2>
-        <p className="text-gray-700 whitespace-pre-line">
-          {issue.issue_description}
-        </p>
-      </div>
-
-      
-
-      {/* Completion Image */}
-      {issue.completion_url && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Completion Proof</h2>
-          <img
-            src={issue.completion_url}
-            alt="Completed"
-            className="max-h-[400px] rounded border"
-          />
-        </div>
-      )}
-
-      {/* Resolve Modal */}
-      {showResolveModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow w-96">
-            <h2 className="text-lg font-semibold mb-4">
-              Upload Completion Image
-            </h2>
-
-            <div className="space-y-3">
-              {/* Hidden file input */}
-              <input
-                id="completion-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-
-              {/* Visible button */}
-              <label
-                htmlFor="completion-upload"
-                className="inline-block cursor-pointer px-4 py-2 border border-gray-300 rounded bg-gray-50 hover:bg-gray-100 text-sm"
+            {issue.status !== "resolved" && (
+              <select
+                value={issue.status}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className="h-7 border border-gray-300 rounded px-2 text-xs bg-white"
               >
-                Choose Completion Image
-              </label>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="escalated">Escalated</option>
+                <option value="resolved">Resolved</option>
+              </select>
+            )}
+          </div>
 
-              {/* Selected file name */}
-              {file && (
-                <div className="text-sm text-gray-600">
-                  Selected: <span className="font-medium">{file.name}</span>
+          <div>
+            <span className="font-semibold">Department:</span>{" "}
+            <span>{issue.department}</span>
+          </div>
+
+          <div>
+            <span className="font-semibold">Location:</span>{" "}
+            <span>{issue.location}</span>
+          </div>
+
+          <div>
+            <span className="font-semibold">Reported On:</span>{" "}
+            <span>{new Date(issue.issue_date).toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Description + Issue Image */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Description</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-[63%_35%] gap-6">
+            {/* Left: Issue Description */}
+            <div className="border rounded-md p-4 bg-gray-50 min-h-[220px]">
+              <p className="text-gray-700 whitespace-pre-line break-words text-sm leading-relaxed">
+                {issue.issue_description}
+              </p>
+            </div>
+
+            {/* Right: Issue Image */}
+            <div className="border rounded-md bg-gray-100 flex items-center justify-center min-h-[220px]">
+              {issue.issue_image_url ? (
+                <img
+                  src={issue.issue_image_url}
+                  alt="Issue"
+                  className="max-h-[260px] object-contain rounded"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-gray-500">
+                  <Camera className="w-8 h-8" />
+                  <span className="text-sm">No issue image available</span>
                 </div>
               )}
             </div>
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowResolveModal(false)}
-                className="px-3 py-1 border rounded"
-              >
-                Cancel
-              </button>
-
-              <button
-                disabled={resolving}
-                onClick={handleResolve}
-                className="px-4 py-1 bg-black text-white rounded"
-              >
-                {resolving ? "Resolving…" : "Resolve"}
-              </button>
-            </div>
           </div>
         </div>
-      )}
+
+        {/* Completion Image */}
+        {issue.completion_url && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">Completion Proof</h2>
+            <img
+              src={issue.completion_url}
+              alt="Completed"
+              className="max-h-[400px] rounded border"
+            />
+          </div>
+        )}
+
+        {/* Resolve Modal */}
+        {showResolveModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg w-[420px] p-6">
+              {/* Header */}
+              <h2 className="text-lg font-semibold mb-4">Proof of Work</h2>
+
+              {/* Form body */}
+              <div className="space-y-4 text-sm">
+                {/* Done by */}
+                <div>
+                  <label className="block font-medium mb-1">Done By</label>
+                  <input
+                    type="text"
+                    placeholder="Employee / Officer name"
+                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+
+                {/* Completed on */}
+                <div>
+                  <label className="block font-medium mb-1">Completed On</label>
+                  <input
+                    type="date"
+                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black"
+                  />
+                </div>
+
+                {/* Departments */}
+                <div>
+                  <label className="block font-medium mb-1">Department</label>
+                  <select className="w-full border rounded px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black">
+                    <option value="">Select department</option>
+                    <option>Sanitation</option>
+                    <option>Roads</option>
+                    <option>Electricity</option>
+                    <option>Water Supply</option>
+                  </select>
+                </div>
+
+                {/* Image upload */}
+                <div>
+                  <label className="block font-medium mb-2">
+                    Completion Image
+                  </label>
+
+                  <input
+                    id="completion-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setFile(e.target.files[0])}
+                  />
+
+                  <label
+                    htmlFor="completion-upload"
+                    className="inline-block cursor-pointer px-4 py-2 border rounded bg-gray-50 hover:bg-gray-100"
+                  >
+                    Choose Image
+                  </label>
+
+                  {file && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      Selected: <span className="font-medium">{file.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowResolveModal(false)}
+                  className="px-4 py-2 border rounded text-sm"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleResolve}
+                  disabled={resolving}
+                  className="px-5 py-2 bg-black text-white rounded text-sm"
+                >
+                  {resolving ? "Submitting…" : "Submit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
