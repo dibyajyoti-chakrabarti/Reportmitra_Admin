@@ -3,17 +3,42 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import RequireAuth from "./RequireAuth";
 
+import IssueList from "./components/IssueList";
+import UrgentIssues from "./components/UrgentIssues";
+import Profile from "./components/Profile";
+import IssueHistory from "./components/IssueHistory";
+import AccountCreation from "./components/AccountCreation";
+import IssueDetail from "./components/IssueDetail";
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Public */}
         <Route path="/" element={<Login />} />
-        <Route path="/dashboard" element={
-          <RequireAuth>
-            <Dashboard />
-          </RequireAuth>
-        } />
-        {/* other routes */}
+
+        {/* Protected Dashboard + ALL pages */}
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <Dashboard />
+            </RequireAuth>
+          }
+        >
+          {/* Dashboard home */}
+          <Route index element={null} />
+
+          {/* Sidebar-linked pages */}
+          <Route path="issues" element={<IssueList />} />
+          <Route path="urgent" element={<UrgentIssues />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="history" element={<IssueHistory />} />
+          <Route path="create" element={<AccountCreation />} />
+          <Route path="issues/:trackingId" element={<IssueDetail />} />
+        </Route>
+
       </Routes>
     </BrowserRouter>
   );

@@ -9,17 +9,33 @@ import {
   History,
   UserPlus,
   ArrowRightCircle,
-  BarChart4, // analytics icon (lucide)
 } from "lucide-react";
+
 import ScreenBlocker from "./ScreenBlocker";
 function DashboardHome() {
+  const navigate = useNavigate();
+
   const features = [
-    { icon: ListChecks, label: "View & manage reported issues" },
-    { icon: AlertTriangle, label: "Handle urgent problems immediately" },
-    { icon: User, label: "View or update your profile" },
-    { icon: History, label: "Track issue history & workflow" },
-    { icon: UserPlus, label: "Create new department/admin accounts" },
-    { icon: BarChart4, label: "Reports & analytics" }, // 6th feature
+    {
+      icon: ListChecks,
+      label: "View & manage reported issues",
+      route: "issues",
+    },
+    {
+      icon: AlertTriangle,
+      label: "Handle urgent problems immediately",
+      route: "urgent",
+    },
+    {
+      icon: User,
+      label: "View or update your profile",
+      route: "profile",
+    },
+    {
+      icon: History,
+      label: "Track issue history & workflow",
+      route: "history",
+    },
   ];
 
   return (
@@ -43,22 +59,21 @@ function DashboardHome() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto text-left">
             {features.map((item, i) => {
               const Icon = item.icon;
+
               return (
                 <div
                   key={i}
-                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition"
+                  onClick={() => navigate(item.route)}
+                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition cursor-pointer"
                 >
                   <Icon className="w-8 h-8 text-black mt-1" />
-                  <p className="text-lg text-zinc-700 leading-snug">{item.label}</p>
+                  <p className="text-lg text-zinc-700 leading-snug">
+                    {item.label}
+                  </p>
                 </div>
               );
             })}
           </div>
-
-          <p className="text-xs text-zinc-500 mt-8">
-            This console helps administrators solve civic issues in Bangalore —
-            use the left panel to navigate through your tools.
-          </p>
         </div>
       </div>
     </div>
@@ -112,6 +127,7 @@ function Dashboard() {
     userId: "",
     fullName: "",
     department: "",
+    isRoot : false,
   });
   const [loadingUser, setLoadingUser] = useState(true);
 
@@ -127,6 +143,7 @@ function Dashboard() {
               userId: data.userid || "",
               fullName: data.full_name || data.userid || "",
               department: data.department || "",
+              isRoot: data.is_root === 1 || data.is_root === true,
             });
           })
           .catch((err) => {
@@ -154,8 +171,10 @@ function Dashboard() {
     { label: "Urgent Issues", to: "urgent" },
     { label: "Profile", to: "profile" },
     { label: "Issue History", to: "history" },
-    { label: "Account Creation", to: "create" },
-    { label: "Reports & Analytics", to: "analytics" }, // new route - create a route/component
+    // ONLY ROOT USERS
+  ...(user.isRoot
+    ? [{ label: "Account Creation", to: "create" }]
+    : []),
   ];
 
   const handleLogout = () => {
@@ -225,7 +244,7 @@ function Dashboard() {
 
       {/* RESIZER */}
       <div
-        className="w-[4px] cursor-col-resize bg-zinc-800 hover:bg-zinc-600"
+        className="w-1 cursor-col-resize bg-zinc-800 hover:bg-zinc-600"
         onMouseDown={() => {
           isResizingRef.current = true;
         }}
@@ -246,7 +265,20 @@ function Dashboard() {
         <main className="flex-1 h-full bg-white text-black p-6 lg:p-8 overflow-hidden">
           {/* Inner scrollable area (only if inner content overflows) */}
           <div className="h-full overflow-auto">
-            {location.pathname === "/dashboard" ? <DashboardHome /> : <Outlet />}
+           {location.pathname === "/dashboard" ? (
+              <DashboardHome />
+            ) : location.pathname.endsWith("/create") && !user.isRoot ? (
+              <div className="h-full flex items-center justify-center text-black">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+                  <p className="text-gray-600">
+                    You do not have permission to access this page.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Outlet context={{ user }} />
+            )}
           </div>
         </main>
       </div>
