@@ -105,20 +105,46 @@ const IssueDetail = () => {
   }, [trackingId]);
 
   const handleStatusChange = async (newStatus) => {
-    if (newStatus === issue.status) return;
+    if (!issue || newStatus === issue.status) return;
 
-    // RESOLVED → open modal
+    // 🚫 pending → only in_progress
+    if (issue.status === "pending" && newStatus !== "in_progress") return;
+
+    // 🚫 in_progress → cannot go back to pending
+    if (issue.status === "in_progress" && newStatus === "pending") return;
+
+    // 🚫 escalated → ONLY resolved allowed
+    if (
+      issue.status === "escalated" &&
+      newStatus !== "resolved"
+    ) {
+      return;
+    }
+
+    // ✅ resolved flow (modal)
     if (newStatus === "resolved") {
       setShowResolveModal(true);
       return;
     }
 
     try {
-      await updateIssueStatus(issue.tracking_id, newStatus);
-      setIssue({ ...issue, status: newStatus });
+      // ✅ escalation → update + redirect
+      if (newStatus === "escalated") {
+        await updateIssueStatus(issue.tracking_id, "escalated");
+        navigate("/dashboard/issues");
+        return;
+      }
+
+      // ✅ normal update (pending → in_progress)
+      const updated = await updateIssueStatus(
+        issue.tracking_id,
+        newStatus
+      );
+
+      setIssue((prev) => ({ ...prev, ...updated }));
     } catch (err) {
       console.error(err);
-      alert("Failed to update status");
+      alert(err.message || "Failed to update status");
     }
   };
 
@@ -187,6 +213,67 @@ const IssueDetail = () => {
               <Download className="w-4 h-4" />
               Download
             </button>
+      {/* Meta Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold">Status:</span>
+
+          {/* Status badge */}
+          <span
+            className={`px-2 py-1 rounded text-xs ${
+              issue.status === "pending"
+                ? "bg-yellow-100 text-yellow-800"
+                : issue.status === "in_progress"
+                ? "bg-blue-100 text-blue-800"
+                : issue.status === "escalated"
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {issue.status.replace("_", " ")}
+          </span>
+
+          {/* Status dropdown */}
+          {issue.status !== "resolved" && (
+            <select
+          value={issue.status}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="pending" disabled={issue.status !== "pending"}>
+            Pending
+          </option>
+
+          <option
+            value="in_progress"
+            disabled={issue.status !== "pending"}
+          >
+            In Progress
+          </option>
+
+          <option
+            value="escalated"
+            disabled={issue.status !== "in_progress"}
+          >
+            Escalated
+          </option>
+
+          <option
+            value="resolved"
+            disabled={
+              !["in_progress", "escalated"].includes(issue.status)
+            }
+          >
+            Resolved
+          </option>
+        </select>
+
+
+          )}
+        </div>
+        <div>
+          <span className="font-semibold">Department:</span> {issue.department}
+        </div>
 
             <button
               onClick={() => navigate(-1)}

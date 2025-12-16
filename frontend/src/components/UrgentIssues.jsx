@@ -14,7 +14,6 @@ const UrgentIssues = () => {
     setLoading(true);
     setError("");
 
-    // 🔥 Fetch ONLY escalated issues
     getIssues("escalated")
       .then((data) => {
         if (!mounted) return;
@@ -108,5 +107,4 @@ const UrgentIssues = () => {
     </div>
   );
 };
-
 export default UrgentIssues;

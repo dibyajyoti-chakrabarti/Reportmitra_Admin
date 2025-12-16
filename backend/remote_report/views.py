@@ -1,7 +1,9 @@
+from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 from .models import IssueReportRemote
 from .serializers import IssueReportSerializer
 from rest_framework import status
@@ -47,6 +49,8 @@ class IssueListView(APIView):
 
         if status:
             issues = issues.filter(status=status)
+        else:
+            issues = issues.filter(status__in = ["pending","in_progress"])
 
         issues = issues.order_by("-issue_date")
 
@@ -81,30 +85,45 @@ class IssueStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, tracking_id):
-        try:
-            issue = IssueReportRemote.objects.get(tracking_id=tracking_id)
-        except IssueReportRemote.DoesNotExist:
-            raise ValidationError("Issue not found")
-
-        # Permission
-        if issue.department != request.user.department and not request.user.is_root:
-            raise PermissionDenied("Access denied")
-
-        if issue.status == "resolved":
-            raise ValidationError("Resolved issues cannot be modified")
-
+        issue = get_object_or_404(IssueReportRemote, tracking_id=tracking_id)
         new_status = request.data.get("status")
 
-        allowed = ["pending", "in_progress", "escalated"]
-        if new_status not in allowed:
-            raise ValidationError("Invalid status transition")
+        if new_status not in ["pending", "in_progress", "escalated", "resolved"]:
+            return Response(
+                {"detail": "Invalid status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        current = issue.status
+
+        # ---- STATE MACHINE ----
+        if current == "pending":
+            if new_status != "in_progress":
+                return Response(
+                    {"detail": "Pending can only move to In Progress"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            issue.allocated_to = str(request.user.userid)
+
+        elif current == "in_progress":
+            if new_status not in ["escalated", "resolved"]:
+                return Response(
+                    {"detail": "In Progress can only move to Escalated or Resolved"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        elif current in ["escalated", "resolved"]:
+            return Response(
+                {"detail": f"{current} issues cannot change status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         issue.status = new_status
-        issue.save(update_fields=["status", "updated_at"])
+        issue.updated_at = timezone.now()
+        issue.save()
 
         return Response(
-            {"message": "Status updated", "status": issue.status},
-            status=status.HTTP_200_OK
+            {"status": issue.status, "allocated_to": issue.allocated_to}
         )
 
 
