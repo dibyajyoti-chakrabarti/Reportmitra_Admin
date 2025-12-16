@@ -10,6 +10,16 @@ import boto3
 import uuid
 from urllib.parse import urlparse, unquote
 
+#To generate Report PDF
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.pagesizes import A4
+from django.http import HttpResponse
+from io import BytesIO
+
+
+
 
 class IssueListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -167,4 +177,104 @@ def generate_presigned_get(value, expires_in=300):
         },
         ExpiresIn=expires_in,
     )
+
+class IssuePDFView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, tracking_id):
+        try:
+            issue = IssueReportRemote.objects.get(tracking_id=tracking_id)
+        except IssueReportRemote.DoesNotExist:
+            raise NotFound("Issue not found")
+
+        # Department-level access
+        if issue.department != request.user.department:
+            raise PermissionDenied("Access denied")
+
+        buffer = BytesIO()
+
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=40,
+            bottomMargin=40,
+        )
+
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            name="Title",
+            parent=styles["Heading1"],
+            alignment=TA_LEFT,
+        )
+
+        label_style = ParagraphStyle(
+            name="Label",
+            parent=styles["Normal"],
+            fontSize=10,
+            leading=14,
+            spaceAfter=2,
+            fontName="Helvetica-Bold",
+        )
+
+        value_style = ParagraphStyle(
+            name="Value",
+            parent=styles["Normal"],
+            fontSize=10,
+            leading=14,
+            spaceAfter=10,
+        )
+
+        wrapped_style = ParagraphStyle(
+            name="Wrapped",
+            parent=styles["Normal"],
+            fontSize=10,
+            leading=14,
+            wordWrap="CJK",  # ⭐ prevents overflow for long strings
+        )
+
+        story = []
+
+        # Title
+        story.append(Paragraph("Issue Report Summary", title_style))
+        story.append(Spacer(1, 20))
+
+        def add_field(label, value):
+            story.append(Paragraph(label, label_style))
+            story.append(
+                Paragraph(value if value else "-", value_style)
+            )
+
+        add_field("Tracking ID:", issue.tracking_id)
+        add_field("Title:", issue.issue_title)
+        add_field("Status:", issue.status)
+        add_field("Department:", issue.department)
+        add_field("Location:", issue.location)
+        add_field(
+            "Reported On:",
+            issue.issue_date.strftime("%d %b %Y, %I:%M %p"),
+        )
+
+        # Description
+        story.append(Spacer(1, 10))
+        story.append(Paragraph("Description:", label_style))
+
+        story.append(
+            Paragraph(
+                issue.issue_description.replace("\n", "<br/>"),
+                wrapped_style,
+            )
+        )
+
+        doc.build(story)
+
+        buffer.seek(0)
+
+        response = HttpResponse(buffer, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            f'attachment; filename="issue_{issue.tracking_id}.pdf"'
+        )
+        return response
 

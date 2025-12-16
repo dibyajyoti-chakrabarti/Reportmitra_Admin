@@ -7,6 +7,8 @@ import {
   resolveIssue,
 } from "../api";
 import { Camera, ArrowLeft } from "lucide-react";
+import { Download } from "lucide-react";
+import { downloadIssuePDF } from "../api";
 
 const IssueDetail = () => {
   const { trackingId } = useParams();
@@ -24,6 +26,24 @@ const IssueDetail = () => {
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [file, setFile] = useState(null);
   const [resolving, setResolving] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadIssuePDF(issue.tracking_id);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `issue_${issue.tracking_id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Failed to download PDF");
+    }
+  };
 
   useEffect(() => {
     if (issue?.image_presigned_url) {
@@ -147,13 +167,23 @@ const IssueDetail = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDownloadPDF}
+              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100 cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+          </div>
         </div>
 
         {/* Meta Info */}
@@ -362,7 +392,7 @@ const IssueDetail = () => {
           <img
             src={issue.image_presigned_url}
             alt="Issue Fullscreen"
-className="h-[65vh] max-w-[95vw] object-contain"
+            className="h-[65vh] max-w-[95vw] object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
