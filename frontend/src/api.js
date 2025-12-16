@@ -104,3 +104,49 @@ export async function getIssueDetail(trackingId) {
 
   return res.json();
 }
+
+export async function getPresignedUpload(file) {
+  const res = await fetchWithAuth("/api/presign-s3/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to get upload URL");
+  return res.json(); // { url, key }
+}
+
+export async function resolveIssue(trackingId, completionKey) {
+  const res = await fetchWithAuth(
+    `/restapi/issues/${trackingId}/resolve/`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completion_key: completionKey }),
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to resolve issue");
+  return res.json();
+}
+
+export async function updateIssueStatus(trackingId, status) {
+  const res = await fetchWithAuth(
+    `/restapi/issues/${trackingId}/status/`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`updateIssueStatus failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}

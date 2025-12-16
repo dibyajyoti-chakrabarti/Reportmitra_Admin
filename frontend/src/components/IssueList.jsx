@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getIssues } from "../api";
+import { useNavigate } from "react-router-dom";
 
 const IssueList = () => {
   const [issues, setIssues] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   // Fetch issues whenever status changes
   useEffect(() => {
@@ -83,8 +85,11 @@ const IssueList = () => {
           !error &&
           issues.map((issue) => (
             <div
-              key={issue.tracking_id}
-              className="grid grid-cols-5 gap-4 px-6 py-4 border-b hover:bg-gray-50 cursor-pointer"
+            key={issue.tracking_id}
+            onClick={() =>
+              navigate(`/dashboard/issues/${issue.tracking_id}`)
+            }
+            className="grid grid-cols-5 gap-4 px-6 py-4 border-b hover:bg-gray-50 cursor-pointer"
             >
               <div className="font-mono text-sm">
                 {issue.tracking_id}
