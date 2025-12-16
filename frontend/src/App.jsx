@@ -8,6 +8,7 @@ import UrgentIssues from "./components/UrgentIssues";
 import Profile from "./components/Profile";
 import IssueHistory from "./components/IssueHistory";
 import AccountCreation from "./components/AccountCreation";
+import IssueDetail from "./components/IssueDetail";
 
 export default function App() {
   return (
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="history" element={<IssueHistory />} />
           <Route path="create" element={<AccountCreation />} />
+          <Route path="issues/:trackingId" element={<IssueDetail />} />
         </Route>
 
       </Routes>

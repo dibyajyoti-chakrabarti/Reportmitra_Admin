@@ -78,3 +78,29 @@ export async function getCurrentUser() {
   return res.json();
 }
 
+export async function getIssues(status = null) {
+  const qs = status && status !== "all" ? `?status=${status}` : "";
+  const res = await fetchWithAuth(`/restapi/issues/${qs}`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`getIssues failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function getIssueDetail(trackingId) {
+  const res = await fetchWithAuth(`/restapi/issues/${trackingId}/`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`getIssueDetail failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}
