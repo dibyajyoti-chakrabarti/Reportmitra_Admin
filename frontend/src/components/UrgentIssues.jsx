@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getIssues } from "../api";
+import { AlertTriangle } from "lucide-react";
 
 const UrgentIssues = () => {
   const navigate = useNavigate();
@@ -19,8 +20,7 @@ const UrgentIssues = () => {
         if (!mounted) return;
         setUrgentIssues(data);
       })
-      .catch((err) => {
-        console.error(err);
+      .catch(() => {
         if (!mounted) return;
         setError("Failed to load urgent issues");
       })
@@ -35,76 +35,77 @@ const UrgentIssues = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-black mb-6">
-        Urgent Issues
-      </h1>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <AlertTriangle className="text-red-600" />
+        <h1 className="text-3xl font-bold text-black">
+          Urgent Issues
+        </h1>
+      </div>
 
-      {loading && (
-        <div className="text-gray-500 text-sm">
-          Loading urgent issues…
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* Table Header */}
+        <div className="grid grid-cols-5 gap-4 bg-gray-50 px-6 py-3 font-semibold text-sm text-gray-700 border-b">
+          <div>Tracking ID</div>
+          <div>Issue Title</div>
+          <div>Issue Date</div>
+          <div>Location</div>
+          <div>Status</div>
         </div>
-      )}
 
-      {!loading && error && (
-        <div className="text-red-500 text-sm">
-          {error}
-        </div>
-      )}
+        {loading && (
+          <div className="px-6 py-4 text-gray-500 text-sm">
+            Loading urgent issues…
+          </div>
+        )}
 
-      {!loading && !error && urgentIssues.length === 0 && (
-        <div className="text-gray-500 text-sm">
-          No urgent issues at the moment.
-        </div>
-      )}
+        {!loading && error && (
+          <div className="px-6 py-4 text-red-500 text-sm">
+            {error}
+          </div>
+        )}
 
-      {!loading && !error && (
-        <div className="space-y-4">
-          {urgentIssues.map((issue) => (
+        {!loading && !error && urgentIssues.length === 0 && (
+          <div className="px-6 py-4 text-gray-500 text-sm">
+            No urgent issues at the moment.
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          urgentIssues.map((issue) => (
             <div
               key={issue.tracking_id}
               onClick={() =>
                 navigate(`/dashboard/issues/${issue.tracking_id}`)
               }
-              className="bg-white rounded-lg shadow p-6 border-l-4 border-red-600 cursor-pointer hover:bg-gray-50"
+              className="grid grid-cols-5 gap-4 px-6 py-4 border-b hover:bg-red-50 cursor-pointer"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">⚠️</span>
-                    <span className="font-mono text-sm text-gray-600">
-                      {issue.tracking_id}
-                    </span>
-                  </div>
+              <div className="font-mono text-sm">
+                {issue.tracking_id}
+              </div>
 
-                  <h3 className="text-xl font-semibold text-black mb-2">
-                    {issue.issue_title}
-                  </h3>
+              <div className="font-medium">
+                {issue.issue_title}
+              </div>
 
-                  <p className="text-gray-600 text-sm">
-                    Location: {issue.location}
-                  </p>
+              <div className="text-gray-600 text-sm">
+                {new Date(issue.issue_date).toLocaleDateString()}
+              </div>
 
-                  <p className="text-gray-500 text-xs mt-1">
-                    Reported{" "}
-                    {new Date(issue.issue_date).toLocaleString()}
-                  </p>
-                </div>
+              <div>{issue.location}</div>
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/dashboard/issues/${issue.tracking_id}`);
-                  }}
-                  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-                >
-                  Take Action
-                </button>
+              <div>
+                <span className="px-2 py-1 rounded text-xs bg-red-100 text-red-800">
+                  escalated
+                </span>
               </div>
             </div>
           ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 };
+
 export default UrgentIssues;

@@ -11,6 +11,7 @@ import {
 import { Camera, ArrowLeft, Download } from "lucide-react";
 
 const IssueDetail = () => {
+
   const { trackingId } = useParams();
   const navigate = useNavigate();
 
@@ -159,8 +160,8 @@ const IssueDetail = () => {
   /* ---------------------------------- UI ---------------------------------- */
 
   return (
-    <div className="flex justify-center items-center h-[83vh]">
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6">
+    <div className="flex justify-center py-8 min-h-[83vh]">
+      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6 mb-8">
         {/* Header */}
         <div className="flex justify-between items-start border-b pb-4 mb-6">
           <div>
@@ -211,14 +212,37 @@ const IssueDetail = () => {
 
             {issue.status !== "resolved" && (
               <select
+                disabled={showResolveModal}
                 value={issue.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="h-7 border rounded px-2 text-xs"
+                className="h-7 border rounded px-2 text-xs bg-white"
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="escalated">Escalated</option>
-                <option value="resolved">Resolved</option>
+                <option value="pending" disabled={issue.status !== "pending"}>
+                  Pending
+                </option>
+
+                <option
+                  value="in_progress"
+                  disabled={issue.status !== "pending"}
+                >
+                  In Progress
+                </option>
+
+                <option
+                  value="escalated"
+                  disabled={issue.status !== "in_progress"}
+                >
+                  Escalated
+                </option>
+
+                <option
+                  value="resolved"
+                  disabled={
+                    !["in_progress", "escalated"].includes(issue.status)
+                  }
+                >
+                  Resolved
+                </option>
               </select>
             )}
           </div>
@@ -363,6 +387,63 @@ const IssueDetail = () => {
             </div>
           </div>
         )}
+
+        {/* Proof of Work (read-only, resolved only) */}
+{issue.status === "resolved" && issue.completion_url && (
+  <div className="mt-10 border-t pt-6">
+    <h2 className="text-lg font-semibold mb-4">
+      Proof of Work
+    </h2>
+
+    <div className="grid grid-cols-1 md:grid-cols-[40%_58%] gap-6">
+      {/* Completion Image */}
+      <div className="border rounded bg-gray-100 flex items-center justify-center p-4">
+        <img
+  src={issue.completion_presigned_url}
+  alt="Completion proof"
+  className="max-h-[280px] object-contain rounded"
+/>
+
+      </div>
+
+      {/* Metadata */}
+      <div className="space-y-3 text-sm">
+        <div>
+          <span className="font-semibold">Tracking ID:</span>{" "}
+          <span className="font-mono">{issue.tracking_id}</span>
+        </div>
+
+        <div>
+          <span className="font-semibold">Department:</span>{" "}
+          {issue.department}
+        </div>
+
+        <div>
+          <span className="font-semibold">Resolved On:</span>{" "}
+          {new Date(issue.updated_at).toLocaleString()}
+        </div>
+
+        <div>
+          <span className="font-semibold">Resolved By:</span>{" "}
+          {issue.allocated_to}
+        </div>
+
+        <div>
+          <span className="font-semibold">Status:</span>{" "}
+          <span className="inline-flex px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+            resolved
+          </span>
+        </div>
+
+        <div className="text-gray-600 text-xs pt-2">
+          This issue was closed after on-site verification and image-based proof
+          submission.
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

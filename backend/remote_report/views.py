@@ -78,6 +78,13 @@ class IssueDetailView(APIView):
             else None
         )
 
+        data["completion_presigned_url"] = (
+            generate_presigned_get(data["completion_url"])
+            if data.get("completion_url")
+            else None
+        )
+
+
         return Response(data)
 
 
