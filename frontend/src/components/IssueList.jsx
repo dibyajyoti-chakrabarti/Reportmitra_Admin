@@ -56,11 +56,11 @@ const IssueList = () => {
       {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="grid grid-cols-5 gap-4 bg-gray-50 px-6 py-3 font-semibold text-sm text-gray-700 border-b">
-          <div>Issue ID</div>
+          <div>Tracking ID</div>
           <div>Issue Title</div>
-          <div>Status</div>
           <div>Date</div>
-          <div>Issue Description</div>
+          <div>Location</div>
+          <div>Status</div>
         </div>
 
         {loading && (
@@ -97,6 +97,13 @@ const IssueList = () => {
 
               <div>{issue.issue_title}</div>
 
+              <div className="text-gray-600 text-sm">
+                {new Date(issue.issue_date).toLocaleDateString()}
+              </div>
+              
+              <div>
+                  {issue.location}
+              </div>
               <div>
                 <span
                   className={`px-2 py-1 rounded text-xs ${
@@ -109,13 +116,6 @@ const IssueList = () => {
                 >
                   {issue.status.replace("_", " ")}
                 </span>
-              </div>
-              <div className="text-gray-600 text-sm">
-                {new Date(issue.issue_date).toLocaleDateString()}
-              </div>
-              
-              <div>
-                  {issue.issue_description}
               </div>
             </div>
           ))}
