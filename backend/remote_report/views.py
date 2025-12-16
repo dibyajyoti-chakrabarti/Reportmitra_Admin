@@ -43,8 +43,16 @@ class IssueDetailView(APIView):
         if issue.department != request.user.department:
             raise PermissionDenied("You do not have access to this issue")
 
-        serializer = IssueReportSerializer(issue)
-        return Response(serializer.data)
+        data = IssueReportSerializer(issue).data
+
+        data["image_presigned_url"] = (
+            generate_presigned_get(data["image_url"])
+            if data.get("image_url")
+            else None
+        )
+
+        return Response(data)
+
 
 class IssueStatusUpdateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -113,3 +121,50 @@ class IssueResolveView(APIView):
         issue.save(update_fields=["status", "completion_url", "updated_at"])
 
         return Response({"message": "Issue resolved successfully"})
+
+
+
+def extract_s3_key(value: str) -> str:
+    """
+    Accepts either:
+    - raw S3 key: reports/6/file.jpg
+    - full S3 URL (encoded or not)
+
+    Returns:
+    - clean S3 object key
+    """
+    if not value:
+        return None
+
+    # Case 1: Already a key
+    if not value.startswith("http"):
+        return value
+
+    # Case 2: Full S3 URL
+    parsed = urlparse(value)
+
+    # Remove leading slash and decode %2F etc
+    return unquote(parsed.path.lstrip("/"))
+
+
+def generate_presigned_get(value, expires_in=300):
+    key = extract_s3_key(value)
+    if not key:
+        return None
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME,
+    )
+
+    return s3.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={
+            "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+            "Key": key,
+        },
+        ExpiresIn=expires_in,
+    )
+

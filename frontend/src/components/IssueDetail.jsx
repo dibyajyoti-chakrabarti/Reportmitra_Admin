@@ -16,10 +16,37 @@ const IssueDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
+
   // NEW (minimal additions)
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [file, setFile] = useState(null);
   const [resolving, setResolving] = useState(false);
+
+  useEffect(() => {
+    if (issue?.image_presigned_url) {
+      setImageLoading(true);
+      setImageError(false);
+    }
+  }, [issue?.image_presigned_url]);
+
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setShowImagePreview(false);
+      }
+    };
+
+    if (showImagePreview) {
+      window.addEventListener("keydown", onKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [showImagePreview]);
 
   useEffect(() => {
     let mounted = true;
@@ -192,13 +219,29 @@ const IssueDetail = () => {
             </div>
 
             {/* Right: Issue Image */}
-            <div className="border rounded-md bg-gray-100 flex items-center justify-center min-h-[220px]">
-              {issue.issue_image_url ? (
-                <img
-                  src={issue.issue_image_url}
-                  alt="Issue"
-                  className="max-h-[260px] object-contain rounded"
-                />
+            <div className="border rounded-md bg-gray-100 flex items-center justify-center min-h-[220px] relative">
+              {issue.image_presigned_url && !imageError ? (
+                <>
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                      <div className="h-8 w-8 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
+                    </div>
+                  )}
+
+                  <img
+                    src={issue.image_presigned_url}
+                    alt="Issue"
+                    onClick={() => setShowImagePreview(true)}
+                    onLoad={() => setImageLoading(false)}
+                    onError={() => {
+                      setImageLoading(false);
+                      setImageError(true);
+                    }}
+                    className={`max-h-[260px] object-contain rounded cursor-zoom-in ${
+                      imageLoading ? "opacity-0" : "opacity-100"
+                    }`}
+                  />
+                </>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-gray-500">
                   <Camera className="w-8 h-8" />
@@ -311,6 +354,19 @@ const IssueDetail = () => {
           </div>
         )}
       </div>
+      {showImagePreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => setShowImagePreview(false)}
+        >
+          <img
+            src={issue.image_presigned_url}
+            alt="Issue Fullscreen"
+className="h-[65vh] max-w-[95vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
