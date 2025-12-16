@@ -6,7 +6,7 @@ import {
   getPresignedUpload,
   resolveIssue,
 } from "../api";
-import { Camera } from "lucide-react";
+import { Camera, ArrowLeft } from "lucide-react";
 
 const IssueDetail = () => {
   const { trackingId } = useParams();
@@ -106,8 +106,8 @@ const IssueDetail = () => {
   if (!issue) return null;
 
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6">
+    <div className="flex justify-center items-center h-[83vh]">
+      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6 border-1">
         {/* Header */}
         <div className="flex justify-between items-start mb-6 border-b pb-4">
           <div>
@@ -122,9 +122,10 @@ const IssueDetail = () => {
 
           <button
             onClick={() => navigate(-1)}
-            className="text-sm px-3 py-1 border rounded hover:bg-gray-100"
+            className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100"
           >
-            ← Back
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
           </button>
         </div>
 
