@@ -8,7 +8,7 @@ import {
 } from "../api";
 import { Camera, ArrowLeft } from "lucide-react";
 import { Download } from "lucide-react";
-import { downloadIssuePDF } from "../api";
+import { downloadIssuePDF, getCurrentUser } from "../api";
 
 const IssueDetail = () => {
   const { trackingId } = useParams();
@@ -21,6 +21,7 @@ const IssueDetail = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // NEW (minimal additions)
   const [showResolveModal, setShowResolveModal] = useState(false);
@@ -44,6 +45,17 @@ const IssueDetail = () => {
       alert("Failed to download PDF");
     }
   };
+
+  useEffect(() => {
+    if (!showResolveModal) return;
+
+    getCurrentUser()
+      .then((data) => setCurrentUser(data))
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to load user info");
+      });
+  }, [showResolveModal]);
 
   useEffect(() => {
     if (issue?.image_presigned_url) {
@@ -308,8 +320,14 @@ const IssueDetail = () => {
                   <label className="block font-medium mb-1">Done By</label>
                   <input
                     type="text"
-                    placeholder="Employee / Officer name"
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black"
+                    value={
+                      currentUser
+                        ? `${currentUser.full_name} (USER ID: ${currentUser.userid})`
+                        : ""
+                    }
+                    readOnly
+                    disabled
+                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                   />
                 </div>
 
@@ -317,21 +335,24 @@ const IssueDetail = () => {
                 <div>
                   <label className="block font-medium mb-1">Completed On</label>
                   <input
-                    type="date"
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black"
+                    type="text"
+                    value={new Date().toLocaleString()}
+                    readOnly
+                    disabled
+                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
                   />
                 </div>
 
                 {/* Departments */}
                 <div>
                   <label className="block font-medium mb-1">Department</label>
-                  <select className="w-full border rounded px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black">
-                    <option value="">Select department</option>
-                    <option>Sanitation</option>
-                    <option>Roads</option>
-                    <option>Electricity</option>
-                    <option>Water Supply</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={currentUser?.department || ""}
+                    readOnly
+                    disabled
+                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
+                  />
                 </div>
 
                 {/* Image upload */}

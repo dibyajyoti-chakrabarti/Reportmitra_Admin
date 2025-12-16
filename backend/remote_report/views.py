@@ -9,6 +9,7 @@ from django.conf import settings
 import boto3
 import uuid
 from urllib.parse import urlparse, unquote
+from django.utils import timezone
 
 #To generate Report PDF
 from reportlab.platypus import (
@@ -105,7 +106,8 @@ class IssueStatusUpdateView(APIView):
             {"message": "Status updated", "status": issue.status},
             status=status.HTTP_200_OK
         )
-    
+
+
 class IssueResolveView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -115,7 +117,7 @@ class IssueResolveView(APIView):
         except IssueReportRemote.DoesNotExist:
             raise ValidationError("Issue not found")
 
-        # Permission check
+        # Department / root permission
         if issue.department != request.user.department and not request.user.is_root:
             raise PermissionDenied("Access denied")
 
@@ -126,23 +128,28 @@ class IssueResolveView(APIView):
         if not completion_key:
             raise ValidationError("completion_key is required")
 
-        bucket = getattr(
-            settings,
-            "REPORT_IMAGES_BUCKET",
-            getattr(settings, "AWS_STORAGE_BUCKET_NAME", None),
-        )
-
+        bucket = settings.AWS_STORAGE_BUCKET_NAME
         if not bucket:
             raise ValidationError("S3 bucket not configured")
 
-        # Construct public S3 URL (store this in DB)
         completion_url = f"https://{bucket}.s3.amazonaws.com/{completion_key}"
 
+        # 🔒 Server-authoritative resolution
         issue.status = "resolved"
         issue.completion_url = completion_url
+        issue.updated_at = timezone.now()
+
         issue.save(update_fields=["status", "completion_url", "updated_at"])
 
-        return Response({"message": "Issue resolved successfully"})
+        return Response(
+            {
+                "message": "Issue resolved successfully",
+                "resolved_by": request.user.full_name,
+                "department": request.user.department,
+                "resolved_at": issue.updated_at,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 
