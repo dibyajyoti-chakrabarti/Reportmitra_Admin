@@ -132,11 +132,11 @@ class IssueResolveView(APIView):
         if not bucket:
             raise ValidationError("S3 bucket not configured")
 
-        completion_url = f"https://{bucket}.s3.amazonaws.com/{completion_key}"
+        
 
         # 🔒 Server-authoritative resolution
         issue.status = "resolved"
-        issue.completion_url = completion_url
+        issue.completion_url = completion_key
         issue.updated_at = timezone.now()
 
         issue.save(update_fields=["status", "completion_url", "updated_at"])

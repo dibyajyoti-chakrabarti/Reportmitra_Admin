@@ -294,18 +294,6 @@ const IssueDetail = () => {
           </div>
         </div>
 
-        {/* Completion Image */}
-        {issue.completion_url && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Completion Proof</h2>
-            <img
-              src={issue.completion_url}
-              alt="Completed"
-              className="max-h-[400px] rounded border"
-            />
-          </div>
-        )}
-
         {/* Resolve Modal */}
         {showResolveModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
