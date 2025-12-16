@@ -44,42 +44,49 @@ const IssueDetail = () => {
     };
   }, [trackingId]);
 
-const handleStatusChange = async (newStatus) => {
-  if (!issue || newStatus === issue.status) return;
+  const handleStatusChange = async (newStatus) => {
+    if (!issue || newStatus === issue.status) return;
 
-  // UX guards
-  if (issue.status === "pending" && newStatus !== "in_progress") return;
-  if (issue.status === "in_progress" && newStatus === "pending") return;
+    // 🚫 pending → only in_progress
+    if (issue.status === "pending" && newStatus !== "in_progress") return;
 
-  // ✅ RESOLVED → modal flow
-  if (newStatus === "resolved") {
-    setShowResolveModal(true);
-    return;
-  }
+    // 🚫 in_progress → cannot go back to pending
+    if (issue.status === "in_progress" && newStatus === "pending") return;
 
-  try {
-    // ✅ ESCALATED → update + redirect
-    if (newStatus === "escalated") {
-      await updateIssueStatus(issue.tracking_id, "escalated");
-      navigate("/dashboard/issues"); // 🔥 force IssueList refresh
+    // 🚫 escalated → ONLY resolved allowed
+    if (
+      issue.status === "escalated" &&
+      newStatus !== "resolved"
+    ) {
       return;
     }
 
-    // ✅ NORMAL transition (pending → in_progress)
-    const updated = await updateIssueStatus(
-      issue.tracking_id,
-      newStatus
-    );
+    // ✅ resolved flow (modal)
+    if (newStatus === "resolved") {
+      setShowResolveModal(true);
+      return;
+    }
 
-    setIssue({ ...issue, ...updated });
-  } catch (err) {
-    console.error(err);
-    alert(err.message || "Failed to update status");
-  }
-};
+    try {
+      // ✅ escalation → update + redirect
+      if (newStatus === "escalated") {
+        await updateIssueStatus(issue.tracking_id, "escalated");
+        navigate("/dashboard/issues");
+        return;
+      }
 
+      // ✅ normal update (pending → in_progress)
+      const updated = await updateIssueStatus(
+        issue.tracking_id,
+        newStatus
+      );
 
-
+      setIssue((prev) => ({ ...prev, ...updated }));
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to update status");
+    }
+  };
 
   const handleResolve = async () => {
     if (!file) {
@@ -165,35 +172,38 @@ const handleStatusChange = async (newStatus) => {
           {/* Status dropdown */}
           {issue.status !== "resolved" && (
             <select
-              value={issue.status}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1 text-xs"
-            >
-                <option value="pending" disabled>
-                  Pending
-                </option>
+          value={issue.status}
+          onChange={(e) => handleStatusChange(e.target.value)}
+          className="border rounded px-3 py-2 text-sm"
+        >
+          <option value="pending" disabled={issue.status !== "pending"}>
+            Pending
+          </option>
 
-                <option
-                  value="in_progress"
-                  disabled={issue.status !== "pending"}
-                >
-                  In Progress
-                </option>
+          <option
+            value="in_progress"
+            disabled={issue.status !== "pending"}
+          >
+            In Progress
+          </option>
 
-                <option
-                  value="escalated"
-                  disabled={issue.status !== "in_progress"}
-                >
-                  Escalated
-                </option>
+          <option
+            value="escalated"
+            disabled={issue.status !== "in_progress"}
+          >
+            Escalated
+          </option>
 
-              <option
-                value="resolved"
-                disabled={issue.status !== "in_progress"}
-              >
-                Resolved
-              </option>
-            </select>
+          <option
+            value="resolved"
+            disabled={
+              !["in_progress", "escalated"].includes(issue.status)
+            }
+          >
+            Resolved
+          </option>
+        </select>
+
 
           )}
         </div>
