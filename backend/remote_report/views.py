@@ -11,12 +11,24 @@ import uuid
 from urllib.parse import urlparse, unquote
 
 #To generate Report PDF
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Image,
+    Table,
+    TableStyle,
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.units import inch
+from reportlab.lib import colors
 from django.http import HttpResponse
 from io import BytesIO
+import requests
+import os
+
 
 
 
@@ -178,6 +190,58 @@ def generate_presigned_get(value, expires_in=300):
         ExpiresIn=expires_in,
     )
 
+def draw_header_footer(canvas, doc):
+    canvas.saveState()
+
+    PAGE_WIDTH, PAGE_HEIGHT = A4
+    HEADER_HEIGHT = 70
+
+    header_y = PAGE_HEIGHT - HEADER_HEIGHT
+
+    # ── Black header bar ───────────────────
+    canvas.setFillColor(colors.black)
+    canvas.rect(
+        0,
+        header_y,
+        PAGE_WIDTH,
+        HEADER_HEIGHT,
+        stroke=0,
+        fill=1,
+    )
+
+    assets_path = os.path.join(os.path.dirname(__file__), "..", "assets")
+
+    try:
+        # Icon logo (vertically centered)
+        canvas.drawImage(
+            os.path.join(assets_path, "logo-1.png"),
+            40,
+            header_y + 17,
+            width=36,
+            height=36,
+            mask="auto",
+        )
+
+        # Text logo (vertically centered)
+        canvas.drawImage(
+            os.path.join(assets_path, "logo-2.png"),
+            90,
+            header_y + 20,
+            width=220,
+            height=30,
+            mask="auto",
+        )
+    except Exception:
+        pass
+
+    # ── Footer ─────────────────────────────
+    canvas.setFillColor(colors.black)
+    canvas.setFont("Helvetica", 9)
+    canvas.drawString(40, 30, f"Page {doc.page}")
+
+    canvas.restoreState()
+
+
 class IssuePDFView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -187,7 +251,6 @@ class IssuePDFView(APIView):
         except IssueReportRemote.DoesNotExist:
             raise NotFound("Issue not found")
 
-        # Department-level access
         if issue.department != request.user.department:
             raise PermissionDenied("Access denied")
 
@@ -198,8 +261,8 @@ class IssuePDFView(APIView):
             pagesize=A4,
             rightMargin=40,
             leftMargin=40,
-            topMargin=40,
-            bottomMargin=40,
+            topMargin=110,     # leave space for black header
+            bottomMargin=50,
         )
 
         styles = getSampleStyleSheet()
@@ -207,23 +270,21 @@ class IssuePDFView(APIView):
         title_style = ParagraphStyle(
             name="Title",
             parent=styles["Heading1"],
-            alignment=TA_LEFT,
+            spaceAfter=20,
         )
 
         label_style = ParagraphStyle(
             name="Label",
             parent=styles["Normal"],
-            fontSize=10,
-            leading=14,
-            spaceAfter=2,
             fontName="Helvetica-Bold",
+            fontSize=10,
+            spaceAfter=2,
         )
 
         value_style = ParagraphStyle(
             name="Value",
             parent=styles["Normal"],
             fontSize=10,
-            leading=14,
             spaceAfter=10,
         )
 
@@ -232,20 +293,17 @@ class IssuePDFView(APIView):
             parent=styles["Normal"],
             fontSize=10,
             leading=14,
-            wordWrap="CJK",  # ⭐ prevents overflow for long strings
+            wordWrap="CJK",
         )
 
         story = []
 
-        # Title
+        # ── Title ────────────────────────────
         story.append(Paragraph("Issue Report Summary", title_style))
-        story.append(Spacer(1, 20))
 
         def add_field(label, value):
             story.append(Paragraph(label, label_style))
-            story.append(
-                Paragraph(value if value else "-", value_style)
-            )
+            story.append(Paragraph(value or "-", value_style))
 
         add_field("Tracking ID:", issue.tracking_id)
         add_field("Title:", issue.issue_title)
@@ -257,10 +315,9 @@ class IssuePDFView(APIView):
             issue.issue_date.strftime("%d %b %Y, %I:%M %p"),
         )
 
-        # Description
+        # ── Description ──────────────────────
         story.append(Spacer(1, 10))
         story.append(Paragraph("Description:", label_style))
-
         story.append(
             Paragraph(
                 issue.issue_description.replace("\n", "<br/>"),
@@ -268,7 +325,39 @@ class IssuePDFView(APIView):
             )
         )
 
-        doc.build(story)
+        # ── Issue Image ──────────────────────
+        if issue.image_url:
+            try:
+                story.append(Spacer(1, 20))
+                story.append(Paragraph("Issue Image:", label_style))
+
+                presigned_url = generate_presigned_get(issue.image_url)
+
+                img_resp = requests.get(presigned_url, timeout=5)
+                img_resp.raise_for_status()
+
+                img_buffer = BytesIO(img_resp.content)
+
+                issue_img = Image(
+                    img_buffer,
+                    width=4.5 * inch,
+                    height=3 * inch,
+                    kind="proportional",
+                )
+                story.append(issue_img)
+            except Exception:
+                story.append(
+                    Paragraph(
+                        "Issue image could not be loaded.",
+                        styles["Italic"],
+                    )
+                )
+
+        doc.build(
+            story,
+            onFirstPage=draw_header_footer,
+            onLaterPages=draw_header_footer,
+        )
 
         buffer.seek(0)
 
