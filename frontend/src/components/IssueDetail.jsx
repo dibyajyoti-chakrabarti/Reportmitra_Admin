@@ -5,10 +5,10 @@ import {
   updateIssueStatus,
   getPresignedUpload,
   resolveIssue,
+  downloadIssuePDF,
+  getCurrentUser,
 } from "../api";
-import { Camera, ArrowLeft } from "lucide-react";
-import { Download } from "lucide-react";
-import { downloadIssuePDF, getCurrentUser } from "../api";
+import { Camera, ArrowLeft, Download } from "lucide-react";
 
 const IssueDetail = () => {
   const { trackingId } = useParams();
@@ -21,41 +21,28 @@ const IssueDetail = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
-  // NEW (minimal additions)
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [file, setFile] = useState(null);
   const [resolving, setResolving] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const handleDownloadPDF = async () => {
-    try {
-      const blob = await downloadIssuePDF(issue.tracking_id);
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `issue_${issue.tracking_id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      alert("Failed to download PDF");
-    }
-  };
+  /* -------------------------------- effects -------------------------------- */
 
   useEffect(() => {
-    if (!showResolveModal) return;
+    let mounted = true;
+    setLoading(true);
+    setError("");
 
-    getCurrentUser()
-      .then((data) => setCurrentUser(data))
-      .catch((err) => {
-        console.error(err);
-        alert("Failed to load user info");
-      });
-  }, [showResolveModal]);
+    getIssueDetail(trackingId)
+      .then((data) => mounted && setIssue(data))
+      .catch(() => mounted && setError("Failed to load issue details"))
+      .finally(() => mounted && setLoading(false));
+
+    return () => {
+      mounted = false;
+    };
+  }, [trackingId]);
 
   useEffect(() => {
     if (issue?.image_presigned_url) {
@@ -65,114 +52,97 @@ const IssueDetail = () => {
   }, [issue?.image_presigned_url]);
 
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setShowImagePreview(false);
-      }
-    };
+    if (!showResolveModal) return;
 
-    if (showImagePreview) {
-      window.addEventListener("keydown", onKeyDown);
-    }
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [showImagePreview]);
+    getCurrentUser()
+      .then(setCurrentUser)
+      .catch(() => alert("Failed to load user info"));
+  }, [showResolveModal]);
 
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    setError("");
+    if (!showImagePreview) return;
 
-    getIssueDetail(trackingId)
-      .then((data) => {
-        if (!mounted) return;
-        setIssue(data);
-      })
-      .catch((err) => {
-        console.error(err);
-        if (!mounted) return;
-        setError("Failed to load issue details");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+    const onKeyDown = (e) => e.key === "Escape" && setShowImagePreview(false);
+    window.addEventListener("keydown", onKeyDown);
 
-    return () => {
-      mounted = false;
-    };
-  }, [trackingId]);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showImagePreview]);
+
+  /* ----------------------------- action handlers ----------------------------- */
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await downloadIssuePDF(issue.tracking_id);
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `issue_${issue.tracking_id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Failed to download PDF");
+    }
+  };
 
   const handleStatusChange = async (newStatus) => {
     if (!issue || newStatus === issue.status) return;
 
-    // 🚫 pending → only in_progress
     if (issue.status === "pending" && newStatus !== "in_progress") return;
-
-    // 🚫 in_progress → cannot go back to pending
     if (issue.status === "in_progress" && newStatus === "pending") return;
+    if (issue.status === "escalated" && newStatus !== "resolved") return;
 
-    // 🚫 escalated → ONLY resolved allowed
-    if (
-      issue.status === "escalated" &&
-      newStatus !== "resolved"
-    ) {
-      return;
-    }
-
-    // ✅ resolved flow (modal)
     if (newStatus === "resolved") {
       setShowResolveModal(true);
       return;
     }
 
     try {
-      // ✅ escalation → update + redirect
       if (newStatus === "escalated") {
         await updateIssueStatus(issue.tracking_id, "escalated");
         navigate("/dashboard/issues");
         return;
       }
 
-      // ✅ normal update (pending → in_progress)
-      const updated = await updateIssueStatus(
-        issue.tracking_id,
-        newStatus
-      );
-
+      const updated = await updateIssueStatus(issue.tracking_id, newStatus);
       setIssue((prev) => ({ ...prev, ...updated }));
     } catch (err) {
-      console.error(err);
       alert(err.message || "Failed to update status");
     }
   };
 
   const handleResolve = async () => {
     if (!file) {
-      alert("Please upload an image");
+      alert("Please upload a completion image");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Only image files are allowed");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB");
       return;
     }
 
     setResolving(true);
     try {
-      // 1. Get presigned URL
       const { url, key } = await getPresignedUpload(file);
 
-      // 2. Upload to S3
       await fetch(url, {
         method: "PUT",
         headers: { "Content-Type": file.type },
         body: file,
       });
 
-      // 3. Mark issue resolved in backend
       await resolveIssue(issue.tracking_id, key);
-
-      // 4. Redirect to history
       navigate("/dashboard/history");
-    } catch (err) {
-      console.error(err);
+    } catch {
       alert("Failed to resolve issue");
     } finally {
       setResolving(false);
@@ -180,25 +150,21 @@ const IssueDetail = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-gray-600">Loading issue details…</div>;
-  }
+  /* --------------------------------- states --------------------------------- */
 
-  if (error) {
-    return <div className="text-red-600">{error}</div>;
-  }
-
+  if (loading) return <div className="text-gray-600">Loading issue…</div>;
+  if (error) return <div className="text-red-600">{error}</div>;
   if (!issue) return null;
+
+  /* ---------------------------------- UI ---------------------------------- */
 
   return (
     <div className="flex justify-center items-center h-[83vh]">
-      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6 border-1">
+      <div className="w-full max-w-5xl bg-white rounded-lg shadow p-6">
         {/* Header */}
-        <div className="flex justify-between items-start mb-6 border-b pb-4">
+        <div className="flex justify-between items-start border-b pb-4 mb-6">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {issue.issue_title}
-            </h1>
+            <h1 className="text-2xl font-semibold">{issue.issue_title}</h1>
             <p className="text-xs text-gray-500 mt-1">
               Tracking ID:{" "}
               <span className="font-mono">{issue.tracking_id}</span>
@@ -208,91 +174,29 @@ const IssueDetail = () => {
           <div className="flex gap-2">
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100 cursor-pointer"
+              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100"
             >
               <Download className="w-4 h-4" />
               Download
             </button>
-      {/* Meta Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-6">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold">Status:</span>
-
-          {/* Status badge */}
-          <span
-            className={`px-2 py-1 rounded text-xs ${
-              issue.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : issue.status === "in_progress"
-                ? "bg-blue-100 text-blue-800"
-                : issue.status === "escalated"
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
-          >
-            {issue.status.replace("_", " ")}
-          </span>
-
-          {/* Status dropdown */}
-          {issue.status !== "resolved" && (
-            <select
-          value={issue.status}
-          onChange={(e) => handleStatusChange(e.target.value)}
-          className="border rounded px-3 py-2 text-sm"
-        >
-          <option value="pending" disabled={issue.status !== "pending"}>
-            Pending
-          </option>
-
-          <option
-            value="in_progress"
-            disabled={issue.status !== "pending"}
-          >
-            In Progress
-          </option>
-
-          <option
-            value="escalated"
-            disabled={issue.status !== "in_progress"}
-          >
-            Escalated
-          </option>
-
-          <option
-            value="resolved"
-            disabled={
-              !["in_progress", "escalated"].includes(issue.status)
-            }
-          >
-            Resolved
-          </option>
-        </select>
-
-
-          )}
-        </div>
-        <div>
-          <span className="font-semibold">Department:</span> {issue.department}
-        </div>
 
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100 cursor-pointer"
+              className="flex items-center gap-1.5 text-sm px-3 py-1 border rounded hover:bg-gray-100"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
+              Back
             </button>
           </div>
         </div>
 
-        {/* Meta Info */}
+        {/* Meta */}
         <div className="space-y-2 text-sm mb-6">
-          {/* Status row (unchanged, stays first) */}
           <div className="flex items-center gap-2">
             <span className="font-semibold">Status:</span>
 
             <span
-              className={`inline-flex items-center px-2 h-7 rounded text-xs font-medium ${
+              className={`px-2 h-7 inline-flex items-center rounded text-xs font-medium ${
                 issue.status === "pending"
                   ? "bg-yellow-100 text-yellow-800"
                   : issue.status === "in_progress"
@@ -309,7 +213,7 @@ const IssueDetail = () => {
               <select
                 value={issue.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="h-7 border border-gray-300 rounded px-2 text-xs bg-white"
+                className="h-7 border rounded px-2 text-xs"
               >
                 <option value="pending">Pending</option>
                 <option value="in_progress">In Progress</option>
@@ -321,58 +225,47 @@ const IssueDetail = () => {
 
           <div>
             <span className="font-semibold">Department:</span>{" "}
-            <span>{issue.department}</span>
+            {issue.department}
           </div>
-
           <div>
-            <span className="font-semibold">Location:</span>{" "}
-            <span>{issue.location}</span>
+            <span className="font-semibold">Location:</span> {issue.location}
           </div>
-
           <div>
             <span className="font-semibold">Reported On:</span>{" "}
-            <span>{new Date(issue.issue_date).toLocaleString()}</span>
+            {new Date(issue.issue_date).toLocaleString()}
           </div>
         </div>
 
-        {/* Description + Issue Image */}
+        {/* Description + Image */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Description</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-[63%_35%] gap-6">
-            {/* Left: Issue Description */}
-            <div className="border rounded-md p-4 bg-gray-50 min-h-[220px]">
-              <p className="text-gray-700 whitespace-pre-line break-words text-sm leading-relaxed">
+            <div className="border rounded p-4 bg-gray-50 min-h-[220px]">
+              <p className="text-sm text-gray-700 whitespace-pre-line break-words">
                 {issue.issue_description}
               </p>
             </div>
 
-            {/* Right: Issue Image */}
-            <div className="border rounded-md bg-gray-100 flex items-center justify-center min-h-[220px] relative">
+            <div className="border rounded bg-gray-100 min-h-[220px] flex items-center justify-center relative">
               {issue.image_presigned_url && !imageError ? (
                 <>
                   {imageLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-8 w-8 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
                     </div>
                   )}
-
                   <img
                     src={issue.image_presigned_url}
                     alt="Issue"
                     onClick={() => setShowImagePreview(true)}
                     onLoad={() => setImageLoading(false)}
-                    onError={() => {
-                      setImageLoading(false);
-                      setImageError(true);
-                    }}
-                    className={`max-h-[260px] object-contain rounded cursor-zoom-in ${
-                      imageLoading ? "opacity-0" : "opacity-100"
-                    }`}
+                    onError={() => setImageError(true)}
+                    className="max-h-[260px] object-contain cursor-zoom-in"
                   />
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-500">
+                <div className="flex flex-col items-center text-gray-500">
                   <Camera className="w-8 h-8" />
                   <span className="text-sm">No issue image available</span>
                 </div>
@@ -383,95 +276,86 @@ const IssueDetail = () => {
 
         {/* Resolve Modal */}
         {showResolveModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-[420px] p-6">
-              {/* Header */}
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg w-[420px] p-6">
               <h2 className="text-lg font-semibold mb-4">Proof of Work</h2>
 
-              {/* Form body */}
               <div className="space-y-4 text-sm">
-                {/* Done by */}
-                <div>
-                  <label className="block font-medium mb-1">Done By</label>
-                  <input
-                    type="text"
-                    value={
-                      currentUser
-                        ? `${currentUser.full_name} (USER ID: ${currentUser.userid})`
-                        : ""
-                    }
-                    readOnly
-                    disabled
-                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-                  />
-                </div>
+                <input
+                  readOnly
+                  disabled
+                  value={
+                    currentUser
+                      ? `${currentUser.full_name} (ID: ${currentUser.userid})`
+                      : ""
+                  }
+                  className="w-full border px-3 py-2 bg-gray-100 rounded"
+                />
 
-                {/* Completed on */}
-                <div>
-                  <label className="block font-medium mb-1">Completed On</label>
-                  <input
-                    type="text"
-                    value={new Date().toLocaleString()}
-                    readOnly
-                    disabled
-                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-                  />
-                </div>
+                <input
+                  readOnly
+                  disabled
+                  value={new Date().toLocaleString()}
+                  className="w-full border px-3 py-2 bg-gray-100 rounded"
+                />
 
-                {/* Departments */}
-                <div>
-                  <label className="block font-medium mb-1">Department</label>
-                  <input
-                    type="text"
-                    value={currentUser?.department || ""}
-                    readOnly
-                    disabled
-                    className="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed"
-                  />
-                </div>
+                <input
+                  readOnly
+                  disabled
+                  value={currentUser?.department || ""}
+                  className="w-full border px-3 py-2 bg-gray-100 rounded"
+                />
 
-                {/* Image upload */}
-                <div>
-                  <label className="block font-medium mb-2">
-                    Completion Image
-                  </label>
+                <input
+                  id="completion-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
 
-                  <input
-                    id="completion-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files[0])}
-                  />
+                <label
+                  htmlFor="completion-upload"
+                  className="inline-block cursor-pointer px-4 py-2 border rounded bg-gray-50 hover:bg-gray-100"
+                >
+                  Choose Image
+                </label>
 
-                  <label
-                    htmlFor="completion-upload"
-                    className="inline-block cursor-pointer px-4 py-2 border rounded bg-gray-50 hover:bg-gray-100"
-                  >
-                    Choose Image
-                  </label>
-
-                  {file && (
-                    <div className="mt-2 text-xs text-gray-600">
-                      Selected: <span className="font-medium">{file.name}</span>
-                    </div>
-                  )}
-                </div>
+                {file && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    Selected: <span className="font-medium">{file.name}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Footer */}
+              {/* Image preview (separate block ABOVE buttons) */}
+              {file && (
+                <div className="mt-4 flex justify-center">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Preview"
+                    className="max-h-40 rounded border"
+                  />
+                </div>
+              )}
+
+              {/* Footer buttons */}
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowResolveModal(false)}
-                  className="px-4 py-2 border rounded text-sm"
+                  className="px-4 py-2 border rounded"
                 >
                   Cancel
                 </button>
 
                 <button
                   onClick={handleResolve}
-                  disabled={resolving}
-                  className="px-5 py-2 bg-black text-white rounded text-sm"
+                  disabled={resolving || !file}
+                  className={`px-5 py-2 rounded text-white ${
+                    resolving || !file
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-black hover:bg-gray-900"
+                  }`}
                 >
                   {resolving ? "Submitting…" : "Submit"}
                 </button>
@@ -480,19 +364,6 @@ const IssueDetail = () => {
           </div>
         )}
       </div>
-      {showImagePreview && (
-        <div
-          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-          onClick={() => setShowImagePreview(false)}
-        >
-          <img
-            src={issue.image_presigned_url}
-            alt="Issue Fullscreen"
-            className="h-[65vh] max-w-[95vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
     </div>
   );
 };
