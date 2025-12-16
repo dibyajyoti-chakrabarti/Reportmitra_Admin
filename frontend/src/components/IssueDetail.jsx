@@ -211,14 +211,37 @@ const IssueDetail = () => {
 
             {issue.status !== "resolved" && (
               <select
+                disabled={showResolveModal}
                 value={issue.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="h-7 border rounded px-2 text-xs"
+                className="h-7 border rounded px-2 text-xs bg-white"
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="escalated">Escalated</option>
-                <option value="resolved">Resolved</option>
+                <option value="pending" disabled={issue.status !== "pending"}>
+                  Pending
+                </option>
+
+                <option
+                  value="in_progress"
+                  disabled={issue.status !== "pending"}
+                >
+                  In Progress
+                </option>
+
+                <option
+                  value="escalated"
+                  disabled={issue.status !== "in_progress"}
+                >
+                  Escalated
+                </option>
+
+                <option
+                  value="resolved"
+                  disabled={
+                    !["in_progress", "escalated"].includes(issue.status)
+                  }
+                >
+                  Resolved
+                </option>
               </select>
             )}
           </div>

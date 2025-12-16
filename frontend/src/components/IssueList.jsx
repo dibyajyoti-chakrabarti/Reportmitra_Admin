@@ -49,7 +49,6 @@ const IssueList = () => {
           <option value="all">All</option>
           <option value="pending">Pending</option>
           <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
         </select>
       </div>
 
@@ -58,7 +57,7 @@ const IssueList = () => {
         <div className="grid grid-cols-5 gap-4 bg-gray-50 px-6 py-3 font-semibold text-sm text-gray-700 border-b">
           <div>Tracking ID</div>
           <div>Issue Title</div>
-          <div>Date</div>
+          <div>Issue Date</div>
           <div>Location</div>
           <div>Status</div>
         </div>
