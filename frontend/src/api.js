@@ -150,3 +150,24 @@ export async function updateIssueStatus(trackingId, status) {
 
   return res.json();
 }
+
+export async function downloadIssuePDF(trackingId) {
+  const token = localStorage.getItem("rm_access");
+
+  const response = await fetch(
+    `/restapi/issues/${trackingId}/pdf/`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to download PDF");
+  }
+
+  const blob = await response.blob();
+  return blob;
+}
