@@ -72,7 +72,7 @@ class IssueStatusUpdateView(APIView):
                     {"detail": "Pending can only move to In Progress"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            issue.allocated_to = str(request.user.id)
+            issue.allocated_to = str(request.user.userid)
 
         elif current == "in_progress":
             if new_status not in ["escalated", "resolved"]:
