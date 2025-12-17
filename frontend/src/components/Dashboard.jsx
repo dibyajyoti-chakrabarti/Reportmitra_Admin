@@ -126,6 +126,7 @@ function Dashboard() {
     const [user, setUser] = useState({
     userId: "",
     fullName: "",
+    email: "",
     department: "",
     isRoot : false,
   });
@@ -142,6 +143,7 @@ function Dashboard() {
             setUser({
               userId: data.userid || "",
               fullName: data.full_name || data.userid || "",
+              email: data.email || "",
               department: data.department || "",
               isRoot: data.is_root === 1 || data.is_root === true,
             });
