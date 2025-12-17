@@ -150,3 +150,18 @@ export async function updateIssueStatus(trackingId, status) {
 
   return res.json();
 }
+
+export async function createAccount(payload) {
+  const res = await fetchWithAuth("/api/register/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`createAccount failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}
