@@ -14,6 +14,18 @@ import os
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [IsAuthenticated, IsRootUser]
+
+    def perform_create(self, serializer):
+        serializer.save(
+            is_root=False,
+            department=self.request.user.department
+        )
+
+    serializer_class = RegisterSerializer
+    permission_classes = [IsAuthenticated, IsRootUser]
+
+# Optional: view current user
+from rest_framework.views import APIView
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):

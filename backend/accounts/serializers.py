@@ -14,6 +14,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ("userid","password","department","is_root","full_name")  # <-- added full_name
 
+    def validate_userid(self, value):
+        if get_user_model().objects.filter(userid=value).exists():
+            raise serializers.ValidationError("User ID already exists")
+        return value
+
+
     def create(self, validated_data):
         return get_user_model().objects.create_user(
             userid=validated_data["userid"],

@@ -151,23 +151,17 @@ export async function updateIssueStatus(trackingId, status) {
   return res.json();
 }
 
-export async function downloadIssuePDF(trackingId) {
-  const token = localStorage.getItem("rm_access");
+export async function createAccount(payload) {
+  const res = await fetchWithAuth("/api/register/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-  const response = await fetch(
-    `/restapi/issues/${trackingId}/pdf/`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error("Failed to download PDF");
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`createAccount failed: ${res.status} ${text}`);
   }
 
-  const blob = await response.blob();
-  return blob;
+  return res.json();
 }
