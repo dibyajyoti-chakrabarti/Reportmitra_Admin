@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, MeView
+from .views import RegisterView, MeView, PresignS3UploadView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .serializers import RegisterSerializer
 
@@ -9,4 +9,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("register/", RegisterView.as_view(), name="register"),
     path("me/", MeView.as_view(), name="me"),
+    path("presign-s3/", PresignS3UploadView.as_view(), name="presign-s3"),
 ]

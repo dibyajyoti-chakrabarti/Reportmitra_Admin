@@ -264,7 +264,8 @@ function Dashboard() {
         {/* Main area: not producing page scrollbar; content centered and will scroll internally if needed */}
         <main className="flex-1 h-full bg-white text-black p-6 lg:p-8 overflow-hidden">
           {/* Inner scrollable area (only if inner content overflows) */}
-          <div className="h-full overflow-auto">
+          <div className="h-full overflow-auto flex justify-center">
+  <div className="w-full max-w-7xl">
            {location.pathname === "/dashboard" ? (
               <DashboardHome />
             ) : location.pathname.endsWith("/create") && !user.isRoot ? (
@@ -279,6 +280,7 @@ function Dashboard() {
             ) : (
               <Outlet context={{ user }} />
             )}
+            </div>
           </div>
         </main>
       </div>
