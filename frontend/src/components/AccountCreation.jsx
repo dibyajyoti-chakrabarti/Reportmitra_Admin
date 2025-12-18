@@ -3,7 +3,7 @@ import { getCurrentUser, createAccount } from "../api";
 
 const AccountCreation = () => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const [formErrors, setFormErrors] = useState({});
 
   const [formData, setFormData] = useState({
     userId: "",
@@ -39,35 +39,61 @@ const AccountCreation = () => {
     };
   }, []);
 
-  const handleCreate = async () => {
-    setError("");
+const handleCreate = async () => {
+  setFormErrors({});
 
+  // 🔒 Frontend validation (fast feedback)
+  if (formData.userId.length !== 6) {
+    setFormErrors({ userId: "User ID must be exactly 6 characters" });
+    return;
+  }
+
+  try {
+    await createAccount({
+      userid: formData.userId,
+      full_name: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+    });
+
+    alert("Account created successfully");
+
+    setFormData((prev) => ({
+      ...prev,
+      userId: "",
+      fullName: "",
+      email: "",
+      password: "",
+    }));
+  } catch (err) {
+    // Backend validation errors (DRF style)
     try {
-      await createAccount({
-        userid: formData.userId,
-        full_name: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-      });
-
-      alert("Account created successfully");
-
-      setFormData((prev) => ({
-        ...prev,
-        userId: "",
-        fullName: "",
-        email: "",
-        password: "",
-      }));
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to create account");
+      const parsed = JSON.parse(
+        err.message.replace(/^createAccount failed: \d+\s*/, "")
+      );
+      setFormErrors(parsed);
+    } catch {
+      setFormErrors({ general: "Failed to create account" });
     }
-  };
+  }
+};
 
   if (loading) {
     return <div className="text-gray-500">Loading…</div>;
   }
+const handleUserIdChange = (e) => {
+  let value = e.target.value.toUpperCase();
+
+  // Allow only A–Z and 0–9
+  value = value.replace(/[^A-Z0-9]/g, "");
+
+  // Max 6 characters
+  if (value.length > 6) {
+    value = value.slice(0, 6);
+  }
+
+  setFormData({ ...formData, userId: value });
+};
 
   return (
     <div>
@@ -80,11 +106,12 @@ const AccountCreation = () => {
           Create new administrative accounts for your department.
         </p>
 
-        {error && (
-          <div className="text-red-600 text-sm mb-4">
-            {error}
-          </div>
-        )}
+        {formErrors.general && (
+  <div className="text-red-600 text-sm mb-4">
+    {formErrors.general}
+  </div>
+)}
+
 
         <div className="space-y-4">
           {/* User ID */}
@@ -93,13 +120,21 @@ const AccountCreation = () => {
               User ID
             </label>
             <input
-              type="text"
-              value={formData.userId}
-              onChange={(e) =>
-                setFormData({ ...formData, userId: e.target.value })
-              }
-              className="w-full px-4 py-3 border rounded focus:border-black"
-            />
+  type="text"
+  value={formData.userId}
+  onChange={handleUserIdChange}
+  maxLength={6}
+  className={`w-full px-4 py-3 border rounded focus:border-black ${
+    formErrors.userId ? "border-red-500" : ""
+  }`}
+/>
+
+{formErrors.userId && (
+  <p className="text-red-500 text-xs mt-1">
+    {formErrors.userId}
+  </p>
+)}
+
           </div>
 
           {/* Full Name */}
