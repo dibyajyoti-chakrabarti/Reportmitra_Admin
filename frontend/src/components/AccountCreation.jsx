@@ -13,6 +13,15 @@ const AccountCreation = () => {
     password: "",
   });
 
+  const generateUserId = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   // Fetch logged-in rootuser
   useEffect(() => {
     let mounted = true;
@@ -70,41 +79,51 @@ const AccountCreation = () => {
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-black mb-6">
-        Account Creation
-      </h1>
+    <div className="flex flex-col justify-center items-center h-[83vh]">
+      <h1 className="text-3xl font-bold text-black mb-6">Account Creation</h1>
 
-      <div className="bg-white rounded-lg shadow p-8 max-w-2xl">
+      <div className="bg-white rounded-lg shadow p-6 max-w-xl border">
         <p className="text-gray-600 mb-6">
           Create new administrative accounts for your department.
         </p>
 
-        {error && (
-          <div className="text-red-600 text-sm mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* User ID */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              User ID
-            </label>
-            <input
-              type="text"
-              value={formData.userId}
-              onChange={(e) =>
-                setFormData({ ...formData, userId: e.target.value })
-              }
-              className="w-full px-4 py-3 border rounded focus:border-black"
-            />
+            <label className="block text-sm font-semibold mb-1">User ID</label>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.userId}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    userId: e.target.value.toUpperCase(),
+                  })
+                }
+                className="flex-1 px-3 py-2 border rounded focus:border-black"
+                placeholder="Auto-generate or enter manually"
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, userId: generateUserId() })
+                }
+                className="px-3 py-2 border rounded text-sm font-semibold
+                 hover:bg-gray-100 transition"
+              >
+                Generate
+              </button>
+            </div>
           </div>
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
+            <label className="block text-sm font-semibold mb-1">
               Full Name
             </label>
             <input
@@ -113,41 +132,39 @@ const AccountCreation = () => {
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className="w-full px-4 py-3 border rounded focus:border-black"
+              className="w-full px-3 py-2 border rounded focus:border-black"
             />
           </div>
 
           {/* Department (LOCKED) */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
+            <label className="block text-sm font-semibold mb-1">
               Department
             </label>
             <input
               type="text"
               value={formData.department}
               disabled
-              className="w-full px-4 py-3 border rounded bg-gray-100 text-gray-500 cursor-not-allowed"
+              className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-500 cursor-not-allowed"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
-              Email
-            </label>
+            <label className="block text-sm font-semibold mb-1">Email</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-4 py-3 border rounded focus:border-black"
+              className="w-full px-3 py-2 border rounded focus:border-black"
             />
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold mb-2">
+            <label className="block text-sm font-semibold mb-1">
               Initial Password
             </label>
             <input
@@ -156,7 +173,7 @@ const AccountCreation = () => {
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="w-full px-4 py-3 border rounded focus:border-black"
+              className="w-full px-3 py-2 border rounded focus:border-black"
             />
           </div>
 
