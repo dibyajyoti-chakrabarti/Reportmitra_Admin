@@ -50,6 +50,13 @@ const handleCreate = async () => {
     return;
   }
 
+const emailRegex =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/;
+  if (!emailRegex.test(formData.email)) {
+    setFormErrors({ email: "Enter a valid email address" });
+    return;
+  }
+
   try {
     await createAccount({
       userid: formData.userId,
@@ -209,8 +216,16 @@ const handleUserIdChange = (e) => {
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-4 py-3 border rounded focus:border-black"
+              className={`w-full px-4 py-3 border rounded focus:border-black ${
+                formErrors.email ? "border-red-500" : ""
+              }`}
             />
+
+            {formErrors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password */}
