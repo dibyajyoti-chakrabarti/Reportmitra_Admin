@@ -119,7 +119,7 @@ export default function Login() {
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
                 className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
-                placeholder="abc123"
+                placeholder="Enter admin user ID"
                 required
               />
             </div>
@@ -132,7 +132,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 required
               />
             </div>
