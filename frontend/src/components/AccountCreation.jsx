@@ -4,6 +4,7 @@ import { getCurrentUser, createAccount } from "../api";
 const AccountCreation = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState({});
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdCreds, setCreatedCreds] = useState(null);
@@ -51,23 +52,31 @@ const AccountCreation = () => {
 
   const handleCreate = async () => {
     setError("");
+    setFormErrors({});
 
-const emailRegex =
-  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/;
-  if (!emailRegex.test(formData.email)) {
-    setFormErrors({ email: "Enter a valid email address" });
-    return;
-  }
+    // User ID validation
+    if (formData.userId.length !== 6) {
+      setFormErrors({ userId: "User ID must be exactly 6 characters" });
+      return;
+    }
 
-  try {
-    await createAccount({
-      userid: formData.userId,
-      full_name: formData.fullName,
-      email: formData.email,
-      password: formData.password,
-    });
+    // Email validation (close to Django EmailField)
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/;
 
-      // Store creds temporarily for CSV
+    if (!emailRegex.test(formData.email)) {
+      setFormErrors({ email: "Enter a valid email address" });
+      return;
+    }
+
+    try {
+      await createAccount({
+        userid: formData.userId,
+        full_name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      });
+
       setCreatedCreds({
         userid: formData.userId,
         password: formData.password,
@@ -75,7 +84,7 @@ const emailRegex =
 
       setShowSuccessModal(true);
 
-      // Clear form (except department)
+      // Clear form except department
       setFormData((prev) => ({
         ...prev,
         userId: "",
@@ -91,16 +100,11 @@ const emailRegex =
   const downloadCSV = () => {
     if (!createdCreds) return;
 
-    const csvContent =
-      `User ID,Password\n${createdCreds.userid},${createdCreds.password}`;
-
-    const blob = new Blob([csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
+    const csvContent = `User ID,Password\n${createdCreds.userid},${createdCreds.password}`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
 
+    const link = document.createElement("a");
     link.href = url;
     link.setAttribute(
       "download",
@@ -148,21 +152,19 @@ const emailRegex =
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    userId: e.target.value.toUpperCase(),
+                    userId: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
                   })
                 }
-                className="flex-1 px-3 py-2 border rounded focus:border-black"
-                placeholder="Auto-generate or enter manually"
                 maxLength={6}
+                className={`flex-1 px-3 py-2 border rounded focus:border-black ${
+                  formErrors.userId ? "border-red-500" : ""
+                }`}
               />
 
               <button
                 type="button"
                 onClick={() =>
-                  setFormData({
-                    ...formData,
-                    userId: generateUserId(),
-                  })
+                  setFormData({ ...formData, userId: generateUserId() })
                 }
                 className="px-3 py-2 border rounded text-sm font-semibold
                            hover:bg-gray-100 transition"
@@ -170,6 +172,12 @@ const emailRegex =
                 Generate
               </button>
             </div>
+
+            {formErrors.userId && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.userId}
+              </p>
+            )}
           </div>
 
           {/* Full Name */}
@@ -212,8 +220,15 @@ const emailRegex =
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-4 py-3 border rounded focus:border-black"
+              className={`w-full px-3 py-2 border rounded focus:border-black ${
+                formErrors.email ? "border-red-500" : ""
+              }`}
             />
+            {formErrors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password */}
