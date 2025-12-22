@@ -150,7 +150,7 @@ const AccountCreation = () => {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-[85vh]">
+    <div className="flex flex-col justify-center items-center h-[88vh]">
       <h1 className="text-3xl font-bold text-black mb-6">Account Creation</h1>
 
       <div className="bg-white rounded-lg shadow p-6 max-w-xl border">
