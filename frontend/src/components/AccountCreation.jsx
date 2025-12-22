@@ -26,6 +26,19 @@ const AccountCreation = () => {
     return result;
   };
 
+  const generatePassword = () => {
+    const length = Math.floor(Math.random() * 5) + 8; // 8–12
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
+    let pwd = "";
+
+    for (let i = 0; i < length; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return pwd;
+  };
+
   // Fetch logged-in root user
   useEffect(() => {
     let mounted = true;
@@ -50,6 +63,16 @@ const AccountCreation = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Auto-generate password once User ID becomes valid
+    if (formData.userId.length === 6 && !formData.password) {
+      setFormData((prev) => ({
+        ...prev,
+        password: generatePassword(),
+      }));
+    }
+  }, [formData.userId]);
+
   const handleCreate = async () => {
     setError("");
     setFormErrors({});
@@ -66,6 +89,11 @@ const AccountCreation = () => {
 
     if (!emailRegex.test(formData.email)) {
       setFormErrors({ email: "Enter a valid email address" });
+      return;
+    }
+
+    if (!formData.password) {
+      setError("Password was not generated. Please generate User ID again.");
       return;
     }
 
@@ -122,28 +150,20 @@ const AccountCreation = () => {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center h-[83vh]">
-      <h1 className="text-3xl font-bold text-black mb-6">
-        Account Creation
-      </h1>
+    <div className="flex flex-col justify-center items-center h-[85vh]">
+      <h1 className="text-3xl font-bold text-black mb-6">Account Creation</h1>
 
       <div className="bg-white rounded-lg shadow p-6 max-w-xl border">
         <p className="text-gray-600 mb-6">
           Create new administrative accounts for your department.
         </p>
 
-        {error && (
-          <div className="text-red-600 text-sm mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="text-red-600 text-sm mb-4">{error}</div>}
 
         <div className="space-y-3">
           {/* User ID */}
           <div>
-            <label className="block text-sm font-semibold mb-1">
-              User ID
-            </label>
+            <label className="block text-sm font-semibold mb-1">User ID</label>
 
             <div className="flex gap-2">
               <input
@@ -152,7 +172,9 @@ const AccountCreation = () => {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    userId: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""),
+                    userId: e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9]/g, ""),
                   })
                 }
                 maxLength={6}
@@ -164,19 +186,21 @@ const AccountCreation = () => {
               <button
                 type="button"
                 onClick={() =>
-                  setFormData({ ...formData, userId: generateUserId() })
+                  setFormData({
+                    ...formData,
+                    userId: generateUserId(),
+                    password: generatePassword(),
+                  })
                 }
                 className="px-3 py-2 border rounded text-sm font-semibold
-                           hover:bg-gray-100 transition"
+             hover:bg-gray-100 transition"
               >
                 Generate
               </button>
             </div>
 
             {formErrors.userId && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors.userId}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{formErrors.userId}</p>
             )}
           </div>
 
@@ -211,9 +235,7 @@ const AccountCreation = () => {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-semibold mb-1">Email</label>
             <input
               type="email"
               value={formData.email}
@@ -225,9 +247,7 @@ const AccountCreation = () => {
               }`}
             />
             {formErrors.email && (
-              <p className="text-red-500 text-xs mt-1">
-                {formErrors.email}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
             )}
           </div>
 
@@ -236,14 +256,20 @@ const AccountCreation = () => {
             <label className="block text-sm font-semibold mb-1">
               Initial Password
             </label>
+
             <input
-              type="password"
+              type="text"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="w-full px-3 py-2 border rounded focus:border-black"
+              readOnly
+              placeholder="Auto-generated"
+              className="w-full px-3 py-2 border rounded
+               bg-gray-100 text-gray-700
+               cursor-not-allowed font-mono"
             />
+
+            <p className="text-xs text-gray-500 mt-1">
+              This password is auto-generated and cannot be changed.
+            </p>
           </div>
 
           <button
@@ -260,8 +286,10 @@ const AccountCreation = () => {
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 text-center">
-            <div className="mx-auto mb-4 flex items-center justify-center
-                            w-12 h-12 rounded-full bg-green-100">
+            <div
+              className="mx-auto mb-4 flex items-center justify-center
+                            w-12 h-12 rounded-full bg-green-100"
+            >
               <svg
                 className="w-6 h-6 text-green-600"
                 fill="none"
