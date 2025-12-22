@@ -226,47 +226,50 @@ def draw_header_footer(canvas, doc):
     canvas.saveState()
 
     PAGE_WIDTH, PAGE_HEIGHT = A4
-    HEADER_HEIGHT = 70
-
+    HEADER_HEIGHT = 60
     header_y = PAGE_HEIGHT - HEADER_HEIGHT
 
-    # ── Black header bar ───────────────────
+    # Header background
     canvas.setFillColor(colors.black)
-    canvas.rect(
-        0,
-        header_y,
-        PAGE_WIDTH,
-        HEADER_HEIGHT,
-        stroke=0,
-        fill=1,
-    )
+    canvas.rect(0, header_y, PAGE_WIDTH, HEADER_HEIGHT, stroke=0, fill=1)
 
+    canvas.setFillColor(colors.white)
+
+    # ── Left: Logo + Brand ─────────────────────────
     assets_path = os.path.join(os.path.dirname(__file__), "..", "assets")
+    logo_path = os.path.join(assets_path, "logo-1.png")
 
     try:
-        # Icon logo (vertically centered)
         canvas.drawImage(
-            os.path.join(assets_path, "logo-1.png"),
+            logo_path,
             40,
-            header_y + 17,
-            width=36,
-            height=36,
-            mask="auto",
-        )
-
-        # Text logo (vertically centered)
-        canvas.drawImage(
-            os.path.join(assets_path, "logo-2.png"),
-            90,
-            header_y + 20,
-            width=220,
+            header_y + 15,
+            width=30,
             height=30,
+            preserveAspectRatio=True,
             mask="auto",
         )
     except Exception:
         pass
 
-    # ── Footer ─────────────────────────────
+    canvas.setFont("Helvetica-Bold", 16)
+    canvas.drawString(80, header_y + 30, "ReportMitra")
+
+    canvas.setFont("Helvetica", 9)
+    canvas.drawString(80, header_y + 16, "CIVIC | CONNECT | RESOLVE")
+
+    # ── Right: Document Type ───────────────────────
+    canvas.setFont("Helvetica-Bold", 11)
+    text = "Issue Field Briefing Report"
+    text_width = canvas.stringWidth(text, "Helvetica-Bold", 11)
+
+    canvas.drawString(
+        PAGE_WIDTH - text_width - 40,
+        header_y + 26,
+        text,
+    )
+
+    # ── Footer ─────────────────────────────────────
     canvas.setFillColor(colors.black)
     canvas.setFont("Helvetica", 9)
     canvas.drawString(40, 30, f"Page {doc.page}")
@@ -292,7 +295,7 @@ class IssuePDFView(APIView):
             pagesize=A4,
             rightMargin=40,
             leftMargin=40,
-            topMargin=120,
+            topMargin=80,
             bottomMargin=60,
         )
 
@@ -342,7 +345,7 @@ class IssuePDFView(APIView):
         story = []
 
         # ── Title & Purpose ───────────────────────────
-        story.append(Paragraph("Issue Field Briefing Report", title_style))
+        # story.append(Paragraph("Issue Field Briefing Report", title_style))
         story.append(
             Paragraph(
                 "This document is generated to assist on-site municipal workers "
