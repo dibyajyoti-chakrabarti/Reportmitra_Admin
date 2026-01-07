@@ -1,17 +1,24 @@
 // api.js — small helper for tokens + authenticated fetch with refresh
+
 const ACCESS_KEY = "rm_access";
 const REFRESH_KEY = "rm_refresh";
+
+// IMPORTANT: API base from env (dev or prod)
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 export function getAccess() {
   return localStorage.getItem(ACCESS_KEY);
 }
+
 export function getRefresh() {
   return localStorage.getItem(REFRESH_KEY);
 }
+
 export function setTokens({ access, refresh }) {
   if (access) localStorage.setItem(ACCESS_KEY, access);
   if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
 }
+
 export function clearTokens() {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
@@ -25,14 +32,16 @@ export async function refreshAccess() {
   const refresh = getRefresh();
   if (!refresh) throw new Error("no refresh token");
 
-  const res = await fetch("/api/token/refresh/", {
+  const res = await fetch(`${API_BASE}/api/token/refresh/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh }),
   });
+
   if (!res.ok) throw new Error("refresh failed");
+
   const data = await res.json();
-  // SIMPLE JWT returns { access: "..."} usually; keep refresh if present
+  // SIMPLE JWT usually returns { access }, keep refresh if not returned
   setTokens({ access: data.access, refresh: data.refresh || refresh });
   return data.access;
 }
@@ -43,6 +52,7 @@ export async function refreshAccess() {
 export async function fetchWithAuth(url, opts = {}) {
   const access = getAccess();
   const headers = new Headers(opts.headers || {});
+
   if (access) headers.set("Authorization", `Bearer ${access}`);
   headers.set("Content-Type", headers.get("Content-Type") || "application/json");
 
@@ -58,31 +68,32 @@ export async function fetchWithAuth(url, opts = {}) {
       throw err;
     }
   }
+
   return res;
 }
 
-// append to frontend/src/api.js (after fetchWithAuth)
 export async function getCurrentUser() {
-  // fetch the current authenticated user from backend endpoint /api/me/
-  const res = await fetchWithAuth("/api/me/", {
+  const res = await fetchWithAuth(`${API_BASE}/api/me/`, {
     method: "GET",
   });
 
   if (!res.ok) {
-    // bubble an error with status + body for easier debugging
     const text = await res.text().catch(() => "");
     const err = new Error(`getCurrentUser failed: ${res.status} ${text}`);
     err.status = res.status;
     throw err;
   }
+
   return res.json();
 }
 
 export async function getIssues(status = null) {
   const qs = status && status !== "all" ? `?status=${status}` : "";
-  const res = await fetchWithAuth(`/restapi/issues/${qs}`, {
-    method: "GET",
-  });
+
+  const res = await fetchWithAuth(
+    `${API_BASE}/restapi/issues/${qs}`,
+    { method: "GET" }
+  );
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -93,9 +104,10 @@ export async function getIssues(status = null) {
 }
 
 export async function getIssueDetail(trackingId) {
-  const res = await fetchWithAuth(`/restapi/issues/${trackingId}/`, {
-    method: "GET",
-  });
+  const res = await fetchWithAuth(
+    `${API_BASE}/restapi/issues/${trackingId}/`,
+    { method: "GET" }
+  );
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -106,7 +118,7 @@ export async function getIssueDetail(trackingId) {
 }
 
 export async function getPresignedUpload(file) {
-  const res = await fetchWithAuth("/api/presign-s3/", {
+  const res = await fetchWithAuth(`${API_BASE}/api/presign-s3/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -121,7 +133,7 @@ export async function getPresignedUpload(file) {
 
 export async function resolveIssue(trackingId, completionKey) {
   const res = await fetchWithAuth(
-    `/restapi/issues/${trackingId}/resolve/`,
+    `${API_BASE}/restapi/issues/${trackingId}/resolve/`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -135,7 +147,7 @@ export async function resolveIssue(trackingId, completionKey) {
 
 export async function updateIssueStatus(trackingId, status) {
   const res = await fetchWithAuth(
-    `/restapi/issues/${trackingId}/status/`,
+    `${API_BASE}/restapi/issues/${trackingId}/status/`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -152,10 +164,10 @@ export async function updateIssueStatus(trackingId, status) {
 }
 
 export async function downloadIssuePDF(trackingId) {
-  const token = localStorage.getItem("rm_access");
+  const token = localStorage.getItem(ACCESS_KEY);
 
   const response = await fetch(
-    `/restapi/issues/${trackingId}/pdf/`,
+    `${API_BASE}/restapi/issues/${trackingId}/pdf/`,
     {
       method: "GET",
       headers: {
@@ -168,12 +180,11 @@ export async function downloadIssuePDF(trackingId) {
     throw new Error("Failed to download PDF");
   }
 
-  const blob = await response.blob();
-  return blob;
+  return response.blob();
 }
 
 export async function createAccount(payload) {
-  const res = await fetchWithAuth("/api/register/", {
+  const res = await fetchWithAuth(`${API_BASE}/api/register/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
