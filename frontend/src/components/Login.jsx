@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoIcon from "../assets/logo-1.png";
 import logoText from "../assets/logo-2.png";
-import ScreenBlocker from "./ScreenBlocker"; // <- use the shared component
+import ScreenBlocker from "./ScreenBlocker";
+import { log } from "@/utils/logger";
 
 /**
  * Login: posts { userid, password } to /api/token/
@@ -40,7 +41,7 @@ export default function Login() {
       });
 
       const data = await res.json().catch(() => ({}));
-      console.log("token endpoint response:", res.status, data);
+      log("token endpoint response:", res.status, data);
 
       if (!res.ok) {
         const msg =
@@ -62,14 +63,16 @@ export default function Login() {
       }
 
       if (data.refresh && !data.access) {
-        console.log("Received only refresh; requesting access via /api/token/refresh/");
+        log("Received only refresh; requesting access via /api/token/refresh/");
+
         const r = await fetch("/api/token/refresh/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refresh: data.refresh }),
         });
+
         const rdata = await r.json().catch(() => ({}));
-        console.log("refresh response:", r.status, rdata);
+        log("refresh response:", r.status, rdata);
 
         if (!r.ok || !rdata.access) {
           setError(rdata.detail || "Failed to obtain access token");
@@ -112,7 +115,9 @@ export default function Login() {
 
           <form onSubmit={submit} className="space-y-5 sm:space-y-6">
             <div>
-              <label htmlFor="userid" className="block text-sm font-medium text-zinc-200">User ID</label>
+              <label htmlFor="userid" className="block text-sm font-medium text-zinc-200">
+                User ID
+              </label>
               <input
                 id="userid"
                 type="text"
@@ -125,7 +130,6 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-zinc-200">Password</label>
               <input
                 id="password"
                 type="password"
@@ -133,6 +137,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 required
               />
             </div>

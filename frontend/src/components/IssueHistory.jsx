@@ -14,7 +14,7 @@ const IssueHistory = () => {
     setLoading(true);
     setError("");
 
-    // 🔥 Fetch ONLY resolved issues
+    //  Fetch ONLY resolved issues
     getIssues("resolved")
       .then((data) => {
         if (!mounted) return;
