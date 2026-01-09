@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
+#load_dotenv()
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-load_dotenv()
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -35,13 +35,13 @@ WSGI_APPLICATION = "admin_hub.wsgi.application"
 # Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "admin_hub.urls"
