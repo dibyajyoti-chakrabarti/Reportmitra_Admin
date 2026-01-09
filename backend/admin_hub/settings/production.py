@@ -6,7 +6,19 @@ DEBUG = False
 # Domains
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOW_CREDENTIALS=True
+
+_raw_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS")
+
+if not _raw_cors_origins:
+    CORS_ALLOWED_ORIGINS = []
+else:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in _raw_cors_origins.split(",")
+        if origin.strip()
+    ]
+
 
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
 
