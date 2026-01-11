@@ -211,7 +211,7 @@ function Dashboard() {
   {loadingUser ? "" : (user.department || "")}
 </p>
 
-            <p className="mt-3 text-[0.7rem] text-zinc-400">ReportMitra Admin Panel</p>
+            <p className="mt-3 text-[0.7rem] text-zinc-400">ReportMitra Citizen Panel</p>
           </div>
         </div>
 
