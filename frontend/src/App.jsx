@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import RequireAuth from "./RequireAuth";
-
+import BackendGate from "./availability/BackendGate";
 import IssueList from "./components/IssueList";
 import UrgentIssues from "./components/UrgentIssues";
 import Profile from "./components/Profile";
@@ -13,6 +13,7 @@ import IssueDetail from "./components/IssueDetail";
 export default function App() {
   return (
     <BrowserRouter>
+    <BackendGate>
       <Routes>
 
         {/* Public */}
@@ -40,6 +41,7 @@ export default function App() {
         </Route>
 
       </Routes>
+      </BackendGate>
     </BrowserRouter>
   );
 }
