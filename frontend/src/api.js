@@ -8,7 +8,7 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 const ENV = import.meta.env.VITE_ENV;
 // In dev → use Vite proxy (/api)
 // In prod → use absolute backend root
-const API_V1 = ENV === "development" ? "/api" : API_BASE;
+const API_V1 = ENV === "development" ? "/api" : `${API_BASE}/api`;
 
 export function getAccess() {
   return localStorage.getItem(ACCESS_KEY);
