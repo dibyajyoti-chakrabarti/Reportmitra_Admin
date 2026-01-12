@@ -150,8 +150,9 @@ const AccountLogs = () => {
 
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="text-center py-12 text-gray-500">
-                Loading logs…
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="h-10 w-10 border-4 border-gray-300 border-t-black rounded-full animate-spin mb-3" />
+                <p className="text-gray-500 text-sm">Loading logs...</p>
               </div>
             ) : filteredLogs.length === 0 ? (
               <div className="text-center py-12 text-gray-500">

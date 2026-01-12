@@ -45,17 +45,19 @@ const AccountActivation = () => {
   const inactiveUsers = users.filter((u) => !u.is_active);
 
   return (
-    <div className="flex flex-col justify-center items-center h-[88vh]">
-      <div className="w-full max-w-5xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-black">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
             Account Activation & Deactivation
           </h1>
           <button
             onClick={loadUsers}
             disabled={loading}
-            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg 
-                     font-semibold transition flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg 
+                     font-semibold transition flex items-center gap-2 disabled:opacity-50 shadow-sm"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -63,28 +65,28 @@ const AccountActivation = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 justify-center">
           <button
             onClick={() => setActiveTab("active")}
-            className={`px-6 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
+            className={`px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 ${
               activeTab === "active"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-black text-white shadow-md"
+                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
             }`}
           >
             <Power className="w-4 h-4" />
-            Active Accounts ({activeUsers.length})
+            Active ({activeUsers.length})
           </button>
           <button
             onClick={() => setActiveTab("inactive")}
-            className={`px-6 py-2 rounded-lg font-semibold transition flex items-center gap-2 ${
+            className={`px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 ${
               activeTab === "inactive"
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                ? "bg-black text-white shadow-md"
+                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
             }`}
           >
             <PowerOff className="w-4 h-4" />
-            Inactive Accounts ({inactiveUsers.length})
+            Inactive ({inactiveUsers.length})
           </button>
         </div>
 
@@ -96,14 +98,17 @@ const AccountActivation = () => {
         )}
 
         {/* Content Area */}
-        <div className="bg-white rounded-lg shadow border p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {activeTab === "active" && (
             <div>
               <p className="text-gray-600 mb-4">
                 Active accounts can log in and access the system. Click "Deactivate" to prevent a user from logging in.
               </p>
               {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading users…</div>
+                <div className="text-center py-12">
+                  <div className="h-10 w-10 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-gray-500">Loading users...</p>
+                </div>
               ) : activeUsers.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   No active users found
@@ -113,11 +118,11 @@ const AccountActivation = () => {
                   {activeUsers.map((user) => (
                     <div
                       key={user.userid}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition"
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <p className="font-bold text-lg">{user.userid}</p>
+                          <p className="font-bold text-lg text-gray-900">{user.userid}</p>
                           <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-semibold">
                             Active
                           </span>
@@ -130,7 +135,7 @@ const AccountActivation = () => {
                         onClick={() => setConfirmModal(user)}
                         className="px-5 py-2.5 bg-red-600 text-white rounded-lg
                                  hover:bg-red-700 transition flex items-center gap-2
-                                 font-bold shadow-sm hover:shadow-md"
+                                 font-semibold shadow-sm hover:shadow-md"
                       >
                         <PowerOff className="w-4 h-4" />
                         Deactivate
@@ -148,7 +153,10 @@ const AccountActivation = () => {
                 Inactive accounts cannot log in. Click "Activate" to restore access for a user.
               </p>
               {loading ? (
-                <div className="text-center py-12 text-gray-500">Loading users…</div>
+                <div className="text-center py-12">
+                  <div className="h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-gray-500">Loading users...</p>
+                </div>
               ) : inactiveUsers.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   No inactive users found
@@ -158,7 +166,7 @@ const AccountActivation = () => {
                   {inactiveUsers.map((user) => (
                     <div
                       key={user.userid}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition"
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -175,7 +183,7 @@ const AccountActivation = () => {
                         onClick={() => setConfirmModal(user)}
                         className="px-5 py-2.5 bg-green-600 text-white rounded-lg
                                  hover:bg-green-700 transition flex items-center gap-2
-                                 font-bold shadow-sm hover:shadow-md"
+                                 font-semibold shadow-sm hover:shadow-md"
                       >
                         <Power className="w-4 h-4" />
                         Activate
@@ -190,8 +198,8 @@ const AccountActivation = () => {
 
         {/* Confirmation Modal */}
         {confirmModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -237,7 +245,7 @@ const AccountActivation = () => {
                 <button
                   onClick={() => handleToggleStatus(confirmModal)}
                   disabled={processing}
-                  className={`flex-1 py-2.5 rounded-lg font-bold transition disabled:opacity-50 ${
+                  className={`flex-1 py-2.5 rounded-lg font-semibold transition disabled:opacity-50 ${
                     confirmModal.is_active
                       ? "bg-red-600 text-white hover:bg-red-700"
                       : "bg-green-600 text-white hover:bg-green-700"
@@ -253,7 +261,7 @@ const AccountActivation = () => {
                   onClick={() => setConfirmModal(null)}
                   disabled={processing}
                   className="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-lg
-                           font-bold hover:bg-gray-300 transition disabled:opacity-50"
+                           font-semibold hover:bg-gray-300 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>

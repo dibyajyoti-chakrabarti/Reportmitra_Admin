@@ -15,10 +15,15 @@ import {
 
 import ScreenBlocker from "./ScreenBlocker";
 
-function DashboardHome() {
+function DashboardHome({ isRoot }) {
   const navigate = useNavigate();
 
-  const features = [
+  const baseFeatures = [
+    {
+      icon: User,
+      label: "View or update your profile",
+      route: "profile",
+    },
     {
       icon: ListChecks,
       label: "View & manage reported issues",
@@ -30,16 +35,31 @@ function DashboardHome() {
       route: "urgent",
     },
     {
-      icon: User,
-      label: "View or update your profile",
-      route: "profile",
-    },
-    {
       icon: History,
       label: "Track issue history & workflow",
       route: "history",
     },
   ];
+
+  const rootFeatures = [
+    {
+      icon: UserPlus,
+      label: "Create & delete user accounts",
+      route: "create",
+    },
+    {
+      icon: UserCog,
+      label: "Activate & deactivate accounts",
+      route: "activation",
+    },
+    {
+      icon: ScrollText,
+      label: "View account activity logs",
+      route: "logs",
+    },
+  ];
+
+  const features = isRoot ? [...baseFeatures, ...rootFeatures] : baseFeatures;
 
   return (
     <div className="h-full flex items-center justify-center">
@@ -151,9 +171,10 @@ function Dashboard() {
   }, []);
 
   const navItems = [
+    { label: "Dashboard", to: "" },
+    { label: "Profile", to: "profile" },
     { label: "Issue List", to: "issues" },
     { label: "Urgent Issues", to: "urgent" },
-    { label: "Profile", to: "profile" },
     { label: "Issue History", to: "history" },
     ...(user.isRoot
       ? [
@@ -171,8 +192,12 @@ function Dashboard() {
   };
 
   const activePage =
-    navItems.find((item) => location.pathname.endsWith(item.to))?.label ||
-    "Dashboard";
+    navItems.find((item) => {
+      if (item.to === "") {
+        return location.pathname === "/dashboard";
+      }
+      return location.pathname.endsWith(item.to);
+    })?.label || "Dashboard";
 
   return (
     <>
@@ -205,7 +230,7 @@ function Dashboard() {
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
-                to={item.to}
+                to={item.to === "" ? "/dashboard" : item.to}
                 className={({ isActive }) =>
                   [
                     "block w-full px-5 py-4 border-b border-zinc-800 text-left font-semibold",
@@ -253,9 +278,9 @@ function Dashboard() {
 
           <main className="flex-1 h-full bg-white text-black p-6 lg:p-8 overflow-hidden">
             <div className="h-full overflow-auto flex justify-center">
-              <div className="w-full max-w-7xl">
+              <div className="w-full max-w-7xl h-[85vh]">
                 {location.pathname === "/dashboard" ? (
-                  <DashboardHome />
+                  <DashboardHome isRoot={user.isRoot} />
                 ) : (location.pathname.endsWith("/create") ||
                     location.pathname.endsWith("/activation") ||
                     location.pathname.endsWith("/logs")) &&
