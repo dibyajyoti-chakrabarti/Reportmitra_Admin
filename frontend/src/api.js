@@ -3,12 +3,18 @@
 const ACCESS_KEY = "rm_access";
 const REFRESH_KEY = "rm_refresh";
 
-// IMPORTANT: API base from env (dev or prod)
 const API_BASE = import.meta.env.VITE_API_BASE;
 const ENV = import.meta.env.VITE_ENV;
-// In dev → use Vite proxy (/api)
-// In prod → use absolute backend root
-const API_V1 = ENV === "development" ? "/api" : `${API_BASE}/api`;
+
+/*
+Local:
+  /api/...  → Vite proxy → Django /api/...
+
+Prod:
+  https://api.admin.reportmitra.in/... → infra → Django /api/...
+*/
+const API_V1 = ENV === "development" ? "/api" : API_BASE;
+
 
 export function getAccess() {
   return localStorage.getItem(ACCESS_KEY);
