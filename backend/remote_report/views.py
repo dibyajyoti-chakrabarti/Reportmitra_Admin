@@ -224,16 +224,14 @@ def draw_header_footer(canvas, doc):
     canvas.saveState()
 
     PAGE_WIDTH, PAGE_HEIGHT = A4
-    HEADER_HEIGHT = 60
+    HEADER_HEIGHT = 70
     header_y = PAGE_HEIGHT - HEADER_HEIGHT
 
-    # Header background
+    # ── Header Background ──────────────────────────────────
     canvas.setFillColor(colors.black)
     canvas.rect(0, header_y, PAGE_WIDTH, HEADER_HEIGHT, stroke=0, fill=1)
 
-    canvas.setFillColor(colors.white)
-
-    # ── Left: Logo + Brand ─────────────────────────
+    # ── Logo ──────────────────────────────────────────────
     assets_path = os.path.join(os.path.dirname(__file__), "..", "assets")
     logo_path = os.path.join(assets_path, "logo-1.png")
 
@@ -241,36 +239,39 @@ def draw_header_footer(canvas, doc):
         canvas.drawImage(
             logo_path,
             40,
-            header_y + 15,
-            width=30,
-            height=30,
+            header_y + 20,
+            width=35,
+            height=35,
             preserveAspectRatio=True,
             mask="auto",
         )
     except Exception:
         pass
 
-    canvas.setFont("Helvetica-Bold", 16)
-    canvas.drawString(80, header_y + 30, "ReportMitra")
+    # ── Brand Text ────────────────────────────────────────
+    canvas.setFillColor(colors.white)
+    canvas.setFont("Helvetica-Bold", 18)
+    canvas.drawString(85, header_y + 38, "ReportMitra")
 
     canvas.setFont("Helvetica", 9)
-    canvas.drawString(80, header_y + 16, "CIVIC | CONNECT | RESOLVE")
+    canvas.setFillColor(HexColor("#D1D5DB"))
+    canvas.drawString(85, header_y + 22, "CIVIC | CONNECT | RESOLVE")
 
-    # ── Right: Document Type ───────────────────────
-    canvas.setFont("Helvetica-Bold", 11)
+    # ── Document Title (Right) ────────────────────────────
+    canvas.setFillColor(colors.white)
+    canvas.setFont("Helvetica-Bold", 12)
     text = "Issue Field Briefing Report"
-    text_width = canvas.stringWidth(text, "Helvetica-Bold", 11)
+    text_width = canvas.stringWidth(text, "Helvetica-Bold", 12)
+    canvas.drawString(PAGE_WIDTH - text_width - 40, header_y + 32, text)
 
-    canvas.drawString(
-        PAGE_WIDTH - text_width - 40,
-        header_y + 26,
-        text,
-    )
-
-    # ── Footer ─────────────────────────────────────
-    canvas.setFillColor(colors.black)
-    canvas.setFont("Helvetica", 9)
-    canvas.drawString(40, 30, f"Page {doc.page}")
+    # ── Footer ─────────────────────────────────────────────
+    canvas.setFillColor(HexColor("#6B7280"))
+    canvas.setFont("Helvetica", 8)
+    canvas.drawString(40, 35, f"Page {doc.page}")
+    
+    footer_text = "Generated from ReportMitra Admin Portal"
+    footer_width = canvas.stringWidth(footer_text, "Helvetica", 8)
+    canvas.drawString(PAGE_WIDTH - footer_width - 40, 35, footer_text)
 
     canvas.restoreState()
 
@@ -293,126 +294,150 @@ class IssuePDFView(APIView):
             pagesize=A4,
             rightMargin=40,
             leftMargin=40,
-            topMargin=80,
-            bottomMargin=60,
+            topMargin=90,
+            bottomMargin=65,
         )
 
         styles = getSampleStyleSheet()
 
-        # ── Custom Styles ─────────────────────────────
-        title_style = ParagraphStyle(
-            "Title",
-            fontSize=18,
-            fontName="Helvetica-Bold",
-            spaceAfter=14,
-        )
-
-        subtitle_style = ParagraphStyle(
-            "Subtitle",
-            fontSize=10,
-            textColor=colors.grey,
-            spaceAfter=20,
-        )
-
+        # ── Custom Styles ──────────────────────────────────
         section_header = ParagraphStyle(
             "SectionHeader",
-            fontSize=12,
+            fontSize=13,
             fontName="Helvetica-Bold",
-            spaceBefore=20,
-            spaceAfter=8,
+            textColor=colors.black,
+            spaceBefore=18,
+            spaceAfter=10,
+            leftIndent=0,
         )
 
-        label = ParagraphStyle(
-            "Label",
-            fontSize=9,
-            fontName="Helvetica-Bold",
-        )
-
-        value = ParagraphStyle(
-            "Value",
-            fontSize=9,
-        )
-
-        wrapped = ParagraphStyle(
-            "Wrapped",
+        body_text = ParagraphStyle(
+            "BodyText",
             fontSize=10,
             leading=14,
-            wordWrap="CJK",
+            textColor=HexColor("#374151"),
+        )
+
+        subtitle = ParagraphStyle(
+            "Subtitle",
+            fontSize=9,
+            textColor=HexColor("#6B7280"),
+            spaceAfter=16,
+            leading=13,
         )
 
         story = []
 
-        # ── Title & Purpose ───────────────────────────
-        # story.append(Paragraph("Issue Field Briefing Report", title_style))
+        # ── Document Purpose ───────────────────────────────
         story.append(
             Paragraph(
-                "This document is generated to assist on-site municipal workers "
-                "with issue verification, safety assessment, and resolution.",
-                subtitle_style,
+                "This document assists on-site municipal workers with issue verification, "
+                "safety assessment, and resolution procedures.",
+                subtitle,
             )
         )
 
-        # ── Status Color ──────────────────────────────
-        status_color = {
-            "pending": HexColor("#6B7280"),
-            "in_progress": HexColor("#D97706"),
-            "escalated": HexColor("#B91C1C"),
-            "resolved": HexColor("#15803D"),
-        }.get(issue.status, colors.black)
-
-        # ── Metadata Table ────────────────────────────
-        meta_table = Table(
-            [
-                ["Tracking ID", issue.tracking_id],
-                ["Status", issue.status.upper()],
-                ["Department", issue.department],
-                ["Location", issue.location],
-                [
-                    "Reported On",
-                    issue.issue_date.strftime("%d %b %Y, %I:%M %p"),
-                ],
-            ],
-            colWidths=[120, 350],
+        # ── Status Badge Color ─────────────────────────────
+        status_colors = {
+            "pending": ("#FEF3C7", "#92400E"),
+            "in_progress": ("#DBEAFE", "#1E40AF"),
+            "escalated": ("#FEE2E2", "#991B1B"),
+            "resolved": ("#D1FAE5", "#065F46"),
+        }
+        bg_color, text_color = status_colors.get(
+            issue.status, ("#F3F4F6", "#1F2937")
         )
 
-        meta_table.setStyle(
+        # ── Issue Overview Card ────────────────────────────
+        story.append(Paragraph("Issue Overview", section_header))
+
+        overview_data = [
+            [
+                Paragraph("<b>Tracking ID</b>", body_text),
+                Paragraph(issue.tracking_id, body_text),
+            ],
+            [
+                Paragraph("<b>Status</b>", body_text),
+                Paragraph(
+                    f'<para backColor="{bg_color}" textColor="{text_color}" '
+                    f'fontSize="9" fontName="Helvetica-Bold">'
+                    f'&nbsp;&nbsp;{issue.status.upper()}&nbsp;&nbsp;</para>',
+                    body_text,
+                ),
+            ],
+            [
+                Paragraph("<b>Department</b>", body_text),
+                Paragraph(issue.department, body_text),
+            ],
+            [
+                Paragraph("<b>Location</b>", body_text),
+                Paragraph(issue.location, body_text),
+            ],
+            [
+                Paragraph("<b>Reported On</b>", body_text),
+                Paragraph(
+                    issue.issue_date.strftime("%d %B %Y, %I:%M %p"), body_text
+                ),
+            ],
+        ]
+
+        overview_table = Table(overview_data, colWidths=[130, 355])
+        overview_table.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
-                    ("TEXTCOLOR", (1, 1), (1, 1), status_color),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                    ("FONT", (0, 0), (0, -1), "Helvetica-Bold"),
-                    ("FONT", (1, 0), (1, -1), "Helvetica"),
-                    ("PADDING", (0, 0), (-1, -1), 6),
+                    ("BACKGROUND", (0, 0), (0, -1), HexColor("#F9FAFB")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
                 ]
             )
         )
+        story.append(overview_table)
+        story.append(Spacer(1, 16))
 
-        story.append(meta_table)
-
-        # ── Issue Title ───────────────────────────────
-        story.append(Spacer(1, 20))
+        # ── Issue Title ────────────────────────────────────
         story.append(Paragraph("Issue Title", section_header))
-        story.append(Paragraph(issue.issue_title, wrapped))
+        title_box = Table(
+            [[Paragraph(issue.issue_title, body_text)]], colWidths=[485]
+        )
+        title_box.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), HexColor("#F9FAFB")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ]
+            )
+        )
+        story.append(title_box)
 
-        # ── Description ───────────────────────────────
+        # ── Description ────────────────────────────────────
         story.append(Paragraph("Issue Description", section_header))
         desc_box = Table(
-            [[Paragraph(issue.issue_description.replace("\n", "<br/>"), wrapped)]],
-            colWidths=[470],
+            [[Paragraph(issue.issue_description.replace("\n", "<br/>"), body_text)]],
+            colWidths=[485],
         )
         desc_box.setStyle(
             TableStyle(
                 [
                     ("BACKGROUND", (0, 0), (-1, -1), HexColor("#F9FAFB")),
-                    ("BOX", (0, 0), (-1, -1), 0.5, colors.grey),
-                    ("PADDING", (0, 0), (-1, -1), 10),
+                    ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
                 ]
             )
         )
         story.append(desc_box)
 
-        # ── Image Section ─────────────────────────────
+        # ── Issue Image ────────────────────────────────────
         story.append(Paragraph("Issue Image (On-site Reference)", section_header))
 
         if issue.image_url:
@@ -428,67 +453,148 @@ class IssuePDFView(APIView):
                     kind="proportional",
                 )
 
-                img_table = Table([[img]], colWidths=[470])
+                img_table = Table([[img]], colWidths=[485])
                 img_table.setStyle(
                     TableStyle(
                         [
-                            ("BOX", (0, 0), (-1, -1), 0.5, colors.grey),
+                            ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
                             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                            ("PADDING", (0, 0), (-1, -1), 6),
+                            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                            ("TOPPADDING", (0, 0), (-1, -1), 10),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                            ("BACKGROUND", (0, 0), (-1, -1), colors.white),
                         ]
                     )
                 )
-
                 story.append(img_table)
-            except Exception:
-                story.append(Paragraph("Image unavailable.", styles["Italic"]))
+            except Exception as e:
+                error_box = Table(
+                    [[Paragraph("Image unavailable", body_text)]], colWidths=[485]
+                )
+                error_box.setStyle(
+                    TableStyle(
+                        [
+                            ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                            ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                            ("TOPPADDING", (0, 0), (-1, -1), 20),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
+                        ]
+                    )
+                )
+                story.append(error_box)
+        else:
+            no_img_box = Table(
+                [[Paragraph("No image attached", body_text)]], colWidths=[485]
+            )
+            no_img_box.setStyle(
+                TableStyle(
+                    [
+                        ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                        ("TOPPADDING", (0, 0), (-1, -1), 20),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 20),
+                    ]
+                )
+            )
+            story.append(no_img_box)
 
-        # ── Allocation Box ────────────────────────────
-        story.append(Paragraph("Allocated To (Fill on-site)", section_header))
+        # ── Allocation Section ─────────────────────────────
+        story.append(Paragraph("Allocated To (Fill On-Site)", section_header))
 
         allocation_box = Table(
-            [[" "], [" "]],
-            colWidths=[470],
-            rowHeights=[20, 20],
+            [[""], [""], [""]],
+            colWidths=[485],
+            rowHeights=[25, 25, 25],
         )
         allocation_box.setStyle(
             TableStyle(
                 [
-                    ("BOX", (0, 0), (-1, -1), 0.7, colors.black),
+                    ("BOX", (0, 0), (-1, -1), 1, colors.black),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.5, HexColor("#D1D5DB")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
                 ]
             )
         )
         story.append(allocation_box)
 
-        # ── QR Code ───────────────────────────────────
-        story.append(Paragraph("Quick Access (Admin Reference)", section_header))
+        # ── QR Code ────────────────────────────────────────
+        story.append(Paragraph("Quick Access QR Code", section_header))
 
         qr_url = f"https://reportmitra.in/admin/issues/{issue.tracking_id}"
         qr_code = qr.QrCodeWidget(qr_url)
         bounds = qr_code.getBounds()
         width = bounds[2] - bounds[0]
         height = bounds[3] - bounds[1]
-        d = Drawing(80, 80, transform=[80.0 / width, 0, 0, 80.0 / height, 0, 0])
+        d = Drawing(100, 100, transform=[100.0 / width, 0, 0, 100.0 / height, 0, 0])
         d.add(qr_code)
 
-        story.append(d)
+        qr_table = Table([[d]], colWidths=[485])
+        qr_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#E5E7EB")),
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 15),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 15),
+                ]
+            )
+        )
+        story.append(qr_table)
+
+        story.append(Spacer(1, 8))
         story.append(
             Paragraph(
-                "Scan to view issue details on ReportMitra Admin Portal.",
-                styles["Italic"],
+                "<i>Scan to view issue details on ReportMitra Admin Portal</i>",
+                ParagraphStyle(
+                    "QRCaption",
+                    fontSize=9,
+                    textColor=HexColor("#6B7280"),
+                    alignment=1,
+                ),
             )
         )
 
-        # ── Authenticity ──────────────────────────────
-        story.append(Spacer(1, 30))
-        story.append(
-            Paragraph(
-                "<b>Verified by ReportMitra - Admin Side</b><br/>"
-                "Official municipal record generated digitally.",
-                styles["Normal"],
+        # ── Document Authenticity ──────────────────────────
+        story.append(Spacer(1, 25))
+        auth_box = Table(
+            [
+                [
+                    Paragraph(
+                        "<b>Official Document</b><br/>"
+                        "This is an official municipal record generated digitally "
+                        "by ReportMitra Admin Portal.",
+                        ParagraphStyle(
+                            "Auth",
+                            fontSize=9,
+                            textColor=HexColor("#374151"),
+                            leading=12,
+                        ),
+                    )
+                ]
+            ],
+            colWidths=[485],
+        )
+        auth_box.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), HexColor("#F3F4F6")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, HexColor("#D1D5DB")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ]
             )
         )
+        story.append(auth_box)
 
+        # ── Build PDF ──────────────────────────────────────
         doc.build(
             story,
             onFirstPage=draw_header_footer,
