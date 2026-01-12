@@ -9,9 +9,19 @@ from .serializers import IssueReportSerializer
 from rest_framework import status
 from django.conf import settings
 import boto3
-import uuid
 from urllib.parse import urlparse, unquote
 from django.utils import timezone
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.graphics.barcode import qr
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib.colors import HexColor
+from django.http import HttpResponse
+from io import BytesIO
+import requests
+import os
 
 #To generate Report PDF
 from reportlab.platypus import (
@@ -22,18 +32,6 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.enums import TA_LEFT
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.graphics.barcode import qr
-from reportlab.graphics.shapes import Drawing
-from reportlab.lib.colors import HexColor
-from django.http import HttpResponse
-from io import BytesIO
-import requests
-import os
 
 class IssueListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -485,7 +483,7 @@ class IssuePDFView(APIView):
         story.append(Spacer(1, 30))
         story.append(
             Paragraph(
-                "<b>Verified by ReportMitra – Admin Side</b><br/>"
+                "<b>Verified by ReportMitra - Admin Side</b><br/>"
                 "Official municipal record generated digitally.",
                 styles["Normal"],
             )

@@ -12,9 +12,10 @@ urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("me/", MeView.as_view(), name="me"),
     path("presign-s3/", PresignS3UploadView.as_view(), name="presign-s3"),
+    
     path("users/", ListUsersView.as_view(), name="list_users"),
     path("users/<str:userid>/delete/", DeleteUserView.as_view(), name="delete_user"),
     path("users/<str:userid>/toggle-status/", ToggleUserStatusView.as_view(), name="toggle_user_status"),
     path("activity-logs/", ActivityLogsView.as_view(), name="activity_logs"),
-    path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
 ]

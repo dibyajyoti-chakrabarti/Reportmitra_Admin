@@ -5,6 +5,10 @@ const REFRESH_KEY = "rm_refresh";
 
 // IMPORTANT: API base from env (dev or prod)
 const API_BASE = import.meta.env.VITE_API_BASE;
+const ENV = import.meta.env.VITE_ENV;
+// In dev → use Vite proxy (/api)
+// In prod → use absolute backend root
+const API_V1 = ENV === "development" ? "/api" : API_BASE;
 
 export function getAccess() {
   return localStorage.getItem(ACCESS_KEY);
@@ -73,7 +77,8 @@ export async function fetchWithAuth(url, opts = {}) {
 }
 
 export async function getCurrentUser() {
-  const res = await fetchWithAuth(`${API_BASE}/api/me/`, {
+  // const res = await fetchWithAuth(`${API_BASE}/api/me/`, {
+  const res = await fetchWithAuth(`${API_V1}/me/`, {
     method: "GET",
   });
 
@@ -184,8 +189,9 @@ export async function downloadIssuePDF(trackingId) {
 }
 
 export async function createAccount(payload) {
-  const res = await fetchWithAuth(`${API_BASE}/api/register/`, {
-    method: "POST",
+  // const res = await fetchWithAuth(`${API_BASE}/api/register/`, {
+  const res = await fetchWithAuth(`${API_V1}/register/`, {
+  method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
@@ -198,7 +204,8 @@ export async function createAccount(payload) {
   return res.json();
 }
 export async function listUsers() {
-  const res = await fetchWithAuth(`${API_BASE}/api/users/`, {
+  // const res = await fetchWithAuth(`${API_BASE}/api/users/`, {
+  const res = await fetchWithAuth(`${API_V1}/users/`, {
     method: "GET",
   });
 
@@ -211,7 +218,8 @@ export async function listUsers() {
 }
 
 export async function deleteUser(userid) {
-  const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/delete/`, {
+  // const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/delete/`, {
+  const res = await fetchWithAuth(`${API_V1}/users/${userid}/delete/`, {
     method: "DELETE",
   });
 
@@ -224,7 +232,8 @@ export async function deleteUser(userid) {
   return res.json();
 }
 export async function toggleUserStatus(userid) {
-  const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/toggle-status/`, {
+  // const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/toggle-status/`, {
+  const res = await fetchWithAuth(`${API_V1}/users/${userid}/toggle-status/`, {
     method: "PATCH",
   });
 
@@ -238,7 +247,8 @@ export async function toggleUserStatus(userid) {
 }
 
 export async function getActivityLogs() {
-  const res = await fetchWithAuth(`${API_BASE}/api/activity-logs/`, {
+  // const res = await fetchWithAuth(`${API_BASE}/api/activity-logs/`, {
+  const res = await fetchWithAuth(`${API_V1}/activity-logs/`, {
     method: "GET",
   });
 
