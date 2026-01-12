@@ -21,6 +21,7 @@ const IssueDetail = () => {
 
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageErrorDetails, setImageErrorDetails] = useState("");
   const [showImagePreview, setShowImagePreview] = useState(false);
 
   const [showResolveModal, setShowResolveModal] = useState(false);
@@ -36,8 +37,18 @@ const IssueDetail = () => {
     setError("");
 
     getIssueDetail(trackingId)
-      .then((data) => mounted && setIssue(data))
-      .catch(() => mounted && setError("Failed to load issue details"))
+      .then((data) => {
+        if (mounted) {
+          console.log("Issue data received:", data);
+          console.log("Image URL:", data.image_url);
+          console.log("Image Presigned URL:", data.image_presigned_url);
+          setIssue(data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load issue:", err);
+        if (mounted) setError("Failed to load issue details");
+      })
       .finally(() => mounted && setLoading(false));
 
     return () => {
@@ -47,8 +58,10 @@ const IssueDetail = () => {
 
   useEffect(() => {
     if (issue?.image_presigned_url) {
+      console.log("Setting up image load for:", issue.image_presigned_url);
       setImageLoading(true);
       setImageError(false);
+      setImageErrorDetails("");
     }
   }, [issue?.image_presigned_url]);
 
@@ -70,6 +83,13 @@ const IssueDetail = () => {
   }, [showImagePreview]);
 
   /* ----------------------------- action handlers ----------------------------- */
+
+  const handleImageError = (e) => {
+    console.error("Image failed to load:", e);
+    console.error("Image src:", e.target.src);
+    setImageError(true);
+    setImageErrorDetails("Failed to load image from S3");
+  };
 
   const handleDownloadPDF = async () => {
     try {
@@ -260,6 +280,18 @@ const IssueDetail = () => {
           </div>
         </div>
 
+        {/* Debug Info - Remove after fixing */}
+        {imageError && imageErrorDetails && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            <div className="font-semibold">Image Load Error:</div>
+            <div>{imageErrorDetails}</div>
+            <div className="mt-2">
+              <div>Image URL: {issue.image_url || 'null'}</div>
+              <div className="break-all">Presigned URL: {issue.image_presigned_url || 'null'}</div>
+            </div>
+          </div>
+        )}
+
         {/* Description + Image */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Description</h2>
@@ -283,15 +315,20 @@ const IssueDetail = () => {
                     src={issue.image_presigned_url}
                     alt="Issue"
                     onClick={() => setShowImagePreview(true)}
-                    onLoad={() => setImageLoading(false)}
-                    onError={() => setImageError(true)}
+                    onLoad={() => {
+                      console.log("Image loaded successfully");
+                      setImageLoading(false);
+                    }}
+                    onError={handleImageError}
                     className="max-h-[260px] object-contain cursor-zoom-in"
                   />
                 </>
               ) : (
                 <div className="flex flex-col items-center text-gray-500">
                   <Camera className="w-8 h-8" />
-                  <span className="text-sm">No issue image available</span>
+                  <span className="text-sm">
+                    {imageError ? "Failed to load image" : "No issue image available"}
+                  </span>
                 </div>
               )}
             </div>
@@ -352,7 +389,7 @@ const IssueDetail = () => {
                 )}
               </div>
 
-              {/* Image preview (separate block ABOVE buttons) */}
+              {/* Image preview */}
               {file && (
                 <div className="mt-4 flex justify-center">
                   <img
@@ -389,60 +426,66 @@ const IssueDetail = () => {
         )}
 
         {/* Proof of Work (read-only, resolved only) */}
-{issue.status === "resolved" && issue.completion_url && (
-  <div className="mt-10 border-t pt-6">
-    <h2 className="text-lg font-semibold mb-4">
-      Proof of Work
-    </h2>
+        {issue.status === "resolved" && (
+          <div className="mt-10 border-t pt-6">
+            <h2 className="text-lg font-semibold mb-4">
+              Proof of Work
+            </h2>
 
-    <div className="grid grid-cols-1 md:grid-cols-[40%_58%] gap-6">
-      {/* Completion Image */}
-      <div className="border rounded bg-gray-100 flex items-center justify-center p-4">
-        <img
-  src={issue.completion_presigned_url}
-  alt="Completion proof"
-  className="max-h-[280px] object-contain rounded"
-/>
+            <div className="grid grid-cols-1 md:grid-cols-[40%_58%] gap-6">
+              {/* Completion Image */}
+              <div className="border rounded bg-gray-100 flex items-center justify-center p-4 min-h-[280px]">
+                {issue.completion_presigned_url || issue.completion_url ? (
+                  <img
+                    src={issue.completion_presigned_url || issue.completion_url}
+                    alt="Completion proof"
+                    className="max-h-[280px] object-contain rounded"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-gray-500">
+                    <Camera className="w-8 h-8" />
+                    <span className="text-sm">No completion image available</span>
+                  </div>
+                )}
+              </div>
 
-      </div>
+              {/* Metadata */}
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-semibold">Tracking ID:</span>{" "}
+                  <span className="font-mono">{issue.tracking_id}</span>
+                </div>
 
-      {/* Metadata */}
-      <div className="space-y-3 text-sm">
-        <div>
-          <span className="font-semibold">Tracking ID:</span>{" "}
-          <span className="font-mono">{issue.tracking_id}</span>
-        </div>
+                <div>
+                  <span className="font-semibold">Department:</span>{" "}
+                  {issue.department}
+                </div>
 
-        <div>
-          <span className="font-semibold">Department:</span>{" "}
-          {issue.department}
-        </div>
+                <div>
+                  <span className="font-semibold">Resolved On:</span>{" "}
+                  {new Date(issue.updated_at).toLocaleString()}
+                </div>
 
-        <div>
-          <span className="font-semibold">Resolved On:</span>{" "}
-          {new Date(issue.updated_at).toLocaleString()}
-        </div>
+                <div>
+                  <span className="font-semibold">Resolved By:</span>{" "}
+                  {issue.allocated_to}
+                </div>
 
-        <div>
-          <span className="font-semibold">Resolved By:</span>{" "}
-          {issue.allocated_to}
-        </div>
+                <div>
+                  <span className="font-semibold">Status:</span>{" "}
+                  <span className="inline-flex px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+                    resolved
+                  </span>
+                </div>
 
-        <div>
-          <span className="font-semibold">Status:</span>{" "}
-          <span className="inline-flex px-2 py-1 rounded text-xs bg-green-100 text-green-800">
-            resolved
-          </span>
-        </div>
-
-        <div className="text-gray-600 text-xs pt-2">
-          This issue was closed after on-site verification and image-based proof
-          submission.
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                <div className="text-gray-600 text-xs pt-2">
+                  This issue was closed after on-site verification and image-based proof
+                  submission.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

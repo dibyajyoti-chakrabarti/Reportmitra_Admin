@@ -223,3 +223,29 @@ export async function deleteUser(userid) {
 
   return res.json();
 }
+export async function toggleUserStatus(userid) {
+  const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/toggle-status/`, {
+    method: "PATCH",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const data = await res.json().catch(() => ({ error: text }));
+    throw new Error(data.error || `toggleUserStatus failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function getActivityLogs() {
+  const res = await fetchWithAuth(`${API_BASE}/api/activity-logs/`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`getActivityLogs failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}

@@ -38,3 +38,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.userid
+
+# NEW: Activity Log Model
+class ActivityLog(models.Model):
+    ACTION_CHOICES = [
+        ('create', 'Account Created'),
+        ('delete', 'Account Deleted'),
+        ('activate', 'Account Activated'),
+        ('deactivate', 'Account Deactivated'),
+        ('login', 'Login'),
+        ('logout', 'Logout'),
+    ]
+    
+    performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='actions_performed')
+    target_user = models.CharField(max_length=6)  # userid of affected user
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+    
+    def __str__(self):
+        return f"{self.performed_by} - {self.action} - {self.target_user}"

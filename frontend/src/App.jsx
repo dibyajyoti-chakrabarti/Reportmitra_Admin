@@ -7,40 +7,46 @@ import IssueList from "./components/IssueList";
 import UrgentIssues from "./components/UrgentIssues";
 import Profile from "./components/Profile";
 import IssueHistory from "./components/IssueHistory";
-import AccountCreation from "./components/AccountCreation";
+import AccountManagement from "./components/AccountManagement";
+import AccountActivation from "./components/AccountActivation";
+import AccountLogs from "./components/AccountLogs";
 import IssueDetail from "./components/IssueDetail";
 
 export default function App() {
   return (
     <BrowserRouter>
-    <BackendGate>
-      <Routes>
+      <BackendGate>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<Login />} />
 
-        {/* Public */}
-        <Route path="/" element={<Login />} />
+          {/* Protected Dashboard + ALL pages */}
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          >
+            {/* Dashboard home */}
+            <Route index element={null} />
 
-        {/* Protected Dashboard + ALL pages */}
-        <Route
-          path="/dashboard"
-          element={
-            <RequireAuth>
-              <Dashboard />
-            </RequireAuth>
-          }
-        >
-          {/* Dashboard home */}
-          <Route index element={null} />
-
-          {/* Sidebar-linked pages */}
-          <Route path="issues" element={<IssueList />} />
-          <Route path="urgent" element={<UrgentIssues />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="history" element={<IssueHistory />} />
-          <Route path="create" element={<AccountCreation />} />
-          <Route path="issues/:trackingId" element={<IssueDetail />} />
-        </Route>
-
-      </Routes>
+            {/* Sidebar-linked pages */}
+            <Route path="issues" element={<IssueList />} />
+            <Route path="urgent" element={<UrgentIssues />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="history" element={<IssueHistory />} />
+            
+            {/* Root-only pages */}
+            <Route path="create" element={<AccountManagement />} />
+            <Route path="activation" element={<AccountActivation />} />
+            <Route path="logs" element={<AccountLogs />} />
+            
+            {/* Issue detail */}
+            <Route path="issues/:trackingId" element={<IssueDetail />} />
+          </Route>
+        </Routes>
       </BackendGate>
     </BrowserRouter>
   );
