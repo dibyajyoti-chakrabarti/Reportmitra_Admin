@@ -197,3 +197,29 @@ export async function createAccount(payload) {
 
   return res.json();
 }
+export async function listUsers() {
+  const res = await fetchWithAuth(`${API_BASE}/api/users/`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`listUsers failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}
+
+export async function deleteUser(userid) {
+  const res = await fetchWithAuth(`${API_BASE}/api/users/${userid}/delete/`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    const data = await res.json().catch(() => ({ error: text }));
+    throw new Error(data.error || `deleteUser failed: ${res.status}`);
+  }
+
+  return res.json();
+}

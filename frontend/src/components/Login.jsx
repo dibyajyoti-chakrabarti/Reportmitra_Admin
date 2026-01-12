@@ -5,6 +5,7 @@ import logoIcon from "../assets/logo-1.png";
 import logoText from "../assets/logo-2.png";
 import ScreenBlocker from "./ScreenBlocker";
 import { log } from "@/utils/logger";
+import { Lock, User, ShieldCheck } from "lucide-react";
 
 /**
  * Login: posts { userid, password } to /api/token/
@@ -100,58 +101,131 @@ export default function Login() {
       {/* Global screen blocker for small/low-res devices */}
       <ScreenBlocker minWidth={MIN_WIDTH} minHeight={700} allowBypass={false} />
 
-      {/* Normal login UI */}
-      <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-6 sm:py-10">
-        <div className="w-full max-w-sm sm:max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl px-5 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col items-center mb-6 sm:mb-8 space-y-3">
-            <div className="flex items-center gap-2 sm:gap-3 bg-black p-2 border border-zinc-600 rounded-lg">
-              <img src={logoIcon} alt="logo" className="h-12 sm:h-16 object-contain" />
-              <img src={logoText} alt="text" className="h-7 sm:h-10 object-contain" />
+      {/* Powerful admin login UI */}
+      <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-4">
+        <div className="w-full max-w-lg">
+          {/* Logo Section */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={logoIcon} alt="ReportMitra" className="h-14 object-contain" />
+              <img src={logoText} alt="ReportMitra" className="h-9 object-contain" />
             </div>
-            <p className="text-[0.65rem] sm:text-xs tracking-[0.25em] uppercase text-zinc-400">
-              Admin Login
-            </p>
+            <div className="flex items-center gap-2 text-gray-400">
+              <ShieldCheck className="w-4 h-4" />
+              <span className="text-xs font-bold tracking-[0.2em] uppercase">
+                Administrator Portal
+              </span>
+            </div>
           </div>
 
-          <form onSubmit={submit} className="space-y-5 sm:space-y-6">
-            <div>
-              <label htmlFor="userid" className="block text-sm font-medium text-zinc-200">
-                User ID
-              </label>
-              <input
-                id="userid"
-                type="text"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
-                placeholder="Enter admin user ID"
-                required
-              />
+          {/* Login Card */}
+          <div className="bg-white rounded-xl shadow-2xl p-8">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
+              Admin Login
+            </h1>
+            <p className="text-sm text-gray-600 mb-6 font-medium">
+              Enter your credentials to access the admin dashboard
+            </p>
+
+            <form onSubmit={submit} className="space-y-5">
+              {/* User ID Field */}
+              <div>
+                <label 
+                  htmlFor="userid" 
+                  className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wide"
+                >
+                  User ID
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <input
+                    id="userid"
+                    type="text"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-300 rounded-lg 
+                             focus:ring-2 focus:ring-black focus:border-black
+                             transition duration-200 text-gray-900 placeholder-gray-400
+                             font-medium"
+                    placeholder="Enter your user ID"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <label 
+                  htmlFor="password" 
+                  className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wide"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-300 rounded-lg 
+                             focus:ring-2 focus:ring-black focus:border-black
+                             transition duration-200 text-gray-900 placeholder-gray-400
+                             font-medium"
+                    placeholder="Enter your password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border-l-4 border-red-600 rounded-r-lg p-4">
+                  <p className="text-sm font-semibold text-red-800">{error}</p>
+                </div>
+              )}
+
+              {/* Login Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-black text-white font-bold text-base py-3 px-6 rounded-lg
+                         hover:bg-gray-900 active:bg-gray-800 transition duration-200 
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         focus:outline-none focus:ring-4 focus:ring-gray-300
+                         shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Authenticating...
+                  </span>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </form>
+
+            {/* Security Notice */}
+            <div className="mt-6 pt-6 border-t-2 border-gray-200">
+              <p className="text-[10px] font-semibold text-gray-500 text-center uppercase tracking-wide">
+                Secure Area • All Access Attempts Are Logged
+              </p>
             </div>
+          </div>
 
-            <div>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg bg-black/60 border border-zinc-600 px-3 py-2 text-white"
-                placeholder="Enter your password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
-
-            {error && <div className="text-sm text-red-400">{error}</div>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-1 rounded-lg bg-white text-black font-semibold py-2"
-            >
-              {loading ? "Logging in…" : "Login"}
-            </button>
-          </form>
+          {/* Footer Note */}
+          <p className="text-center text-gray-500 text-xs font-medium mt-4 tracking-wide">
+            ReportMitra Admin System v1.0
+          </p>
         </div>
       </div>
     </>

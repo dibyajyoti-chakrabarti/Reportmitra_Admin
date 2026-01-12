@@ -21,16 +21,63 @@ class RegisterView(generics.CreateAPIView):
             department=self.request.user.department
         )
 
-    serializer_class = RegisterSerializer
+# NEW: Delete user view
+class DeleteUserView(APIView):
     permission_classes = [IsAuthenticated, IsRootUser]
 
+    def delete(self, request, userid):
+        User = get_user_model()
+        
+        # Prevent deleting yourself
+        if request.user.userid == userid:
+            return Response(
+                {"error": "Cannot delete your own account"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prevent deleting root users
+        try:
+            user = User.objects.get(userid=userid)
+            if user.is_root:
+                return Response(
+                    {"error": "Cannot delete root users"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Delete the user
+            user.delete()
+            return Response(
+                {"message": f"User {userid} deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+# NEW: List users in department
+class ListUsersView(APIView):
+    permission_classes = [IsAuthenticated, IsRootUser]
+
+    def get(self, request):
+        User = get_user_model()
+        # Only show users in the same department, exclude root users and self
+        users = User.objects.filter(
+            department=request.user.department,
+            is_root=False
+        ).exclude(userid=request.user.userid).values(
+            'userid', 'full_name', 'email', 'department'
+        )
+        return Response(list(users))
+
 # Optional: view current user
-from rest_framework.views import APIView
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
         user = request.user
         return Response(UserSerializer(user).data)
+
 class PresignS3UploadView(APIView):
     permission_classes = [IsAuthenticated]
 
