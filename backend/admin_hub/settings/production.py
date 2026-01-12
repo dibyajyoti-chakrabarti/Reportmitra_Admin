@@ -2,6 +2,7 @@ from .base import *
 import os
 
 DEBUG = False
+APPEND_SLASH = False
 
 # Domains
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
