@@ -197,6 +197,17 @@ def extract_s3_key(value: str) -> str:
 
     # Remove leading slash and decode %2F etc
     return unquote(parsed.path.lstrip("/"))
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=(
+            getattr(settings, "AWS_REGION", None)
+            or getattr(settings, "AWS_S3_REGION_NAME", None)
+            or "ap-south-1"
+        ),
+    )
 
 
 def generate_presigned_get(value, expires_in=300):
@@ -204,17 +215,20 @@ def generate_presigned_get(value, expires_in=300):
     if not key:
         return None
 
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=settings.AWS_S3_REGION_NAME,
+    bucket_name = (
+        getattr(settings, "REPORT_IMAGES_BUCKET", None)
+        or getattr(settings, "AWS_STORAGE_BUCKET_NAME", None)
     )
 
+    if not bucket_name:
+        raise RuntimeError("No S3 bucket configured")
+
+    s3 = get_s3_client()
+
     return s3.generate_presigned_url(
-        ClientMethod="get_object",
+        "get_object",
         Params={
-            "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+            "Bucket": bucket_name,
             "Key": key,
         },
         ExpiresIn=expires_in,
