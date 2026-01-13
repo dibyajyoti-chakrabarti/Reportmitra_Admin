@@ -55,8 +55,9 @@ const UrgentIssues = () => {
         </div>
 
         {loading && (
-          <div className="px-6 py-4 text-gray-500 text-sm">
-            Loading urgent issues…
+          <div className="px-6 py-12 flex flex-col items-center">
+            <div className="h-10 w-10 border-4 border-gray-300 border-t-black rounded-full animate-spin mb-3" />
+            <p className="text-gray-500 text-sm">Loading urgent issues...</p>
           </div>
         )}
 
