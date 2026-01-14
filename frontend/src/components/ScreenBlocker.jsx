@@ -1,16 +1,7 @@
-// ScreenBlocker.jsx
 import React, { useEffect, useState, useCallback } from "react";
 import { LayoutDashboard } from "lucide-react";
 
-/**
- * ScreenBlocker
- *
- * Props:
- * - minWidth: minimum allowed viewport width (px)
- * - minHeight: minimum allowed viewport height (px)
- * - allowBypass: boolean, if true shows a "Continue anyway" that bypasses the block
- * - className: optional wrapper className
- */
+
 export default function ScreenBlocker({
   minWidth = 1024,
   minHeight = 700,

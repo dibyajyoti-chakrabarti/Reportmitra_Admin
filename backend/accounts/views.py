@@ -12,7 +12,6 @@ import boto3
 import uuid
 import os
 
-# Helper function to log activities
 def log_activity(performed_by, target_user, action, details="", request=None):
     ip_address = None
     if request:
@@ -39,7 +38,6 @@ class RegisterView(generics.CreateAPIView):
             is_root=False,
             department=self.request.user.department
         )
-        # Log account creation
         log_activity(
             performed_by=self.request.user,
             target_user=user.userid,
@@ -87,8 +85,7 @@ class DeleteUserView(APIView):
                     {"error": "Cannot delete root users"},
                     status=status.HTTP_403_FORBIDDEN
                 )
-            
-            # Log before deletion
+
             log_activity(
                 performed_by=request.user,
                 target_user=user.userid,
@@ -108,7 +105,6 @@ class DeleteUserView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-# NEW: Toggle user active status
 class ToggleUserStatusView(APIView):
     permission_classes = [IsAuthenticated, IsRootUser]
 
@@ -130,11 +126,9 @@ class ToggleUserStatusView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
             
-            # Toggle status
             user.is_active = not user.is_active
             user.save()
             
-            # Log activity
             action = 'activate' if user.is_active else 'deactivate'
             log_activity(
                 performed_by=request.user,
@@ -154,15 +148,13 @@ class ToggleUserStatusView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-# NEW: Get activity logs
 class ActivityLogsView(APIView):
     permission_classes = [IsAuthenticated, IsRootUser]
 
     def get(self, request):
-        # Get logs for users in the same department
         logs = ActivityLog.objects.filter(
             performed_by__department=request.user.department
-        ).select_related('performed_by')[:100]  # Last 100 logs
+        ).select_related('performed_by')[:100]
         
         serializer = ActivityLogSerializer(logs, many=True)
         return Response(serializer.data)

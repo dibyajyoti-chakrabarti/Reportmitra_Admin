@@ -116,7 +116,6 @@ const AccountLogs = () => {
           </button>
         </div>
 
-        {/* Filter */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {actionTypes.map((type) => (
             <button
@@ -140,7 +139,6 @@ const AccountLogs = () => {
           </div>
         )}
 
-        {/* Logs */}
         <div className="bg-white rounded-lg shadow border flex-1 overflow-hidden flex flex-col">
           <div className="bg-gray-50 border-b px-6 py-4">
             <p className="text-sm font-semibold text-gray-600">
@@ -166,7 +164,6 @@ const AccountLogs = () => {
                     className="px-6 py-4 hover:bg-gray-50 transition"
                   >
                     <div className="flex items-start gap-4">
-                      {/* Icon */}
                       <div
                         className={`p-2 rounded-lg border ${getActionColor(
                           log.action
@@ -175,7 +172,6 @@ const AccountLogs = () => {
                         {getActionIcon(log.action)}
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span

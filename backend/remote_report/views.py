@@ -241,11 +241,11 @@ def draw_header_footer(canvas, doc):
     HEADER_HEIGHT = 70
     header_y = PAGE_HEIGHT - HEADER_HEIGHT
 
-    # ── Header Background ──────────────────────────────────
+    #Header Bg
     canvas.setFillColor(colors.black)
     canvas.rect(0, header_y, PAGE_WIDTH, HEADER_HEIGHT, stroke=0, fill=1)
 
-    # ── Logo ──────────────────────────────────────────────
+    #Logo
     assets_path = os.path.join(os.path.dirname(__file__), "..", "assets")
     logo_path = os.path.join(assets_path, "logo-1.png")
 
@@ -262,7 +262,6 @@ def draw_header_footer(canvas, doc):
     except Exception:
         pass
 
-    # ── Brand Text ────────────────────────────────────────
     canvas.setFillColor(colors.white)
     canvas.setFont("Helvetica-Bold", 18)
     canvas.drawString(85, header_y + 38, "ReportMitra")
@@ -271,14 +270,14 @@ def draw_header_footer(canvas, doc):
     canvas.setFillColor(HexColor("#D1D5DB"))
     canvas.drawString(85, header_y + 22, "CIVIC | CONNECT | RESOLVE")
 
-    # ── Document Title (Right) ────────────────────────────
+    #DocTitle
     canvas.setFillColor(colors.white)
     canvas.setFont("Helvetica-Bold", 12)
     text = "Issue Field Briefing Report"
     text_width = canvas.stringWidth(text, "Helvetica-Bold", 12)
     canvas.drawString(PAGE_WIDTH - text_width - 40, header_y + 32, text)
 
-    # ── Footer ─────────────────────────────────────────────
+    #Footer
     canvas.setFillColor(HexColor("#6B7280"))
     canvas.setFont("Helvetica", 8)
     canvas.drawString(40, 35, f"Page {doc.page}")
@@ -312,9 +311,6 @@ class IssuePDFView(APIView):
             bottomMargin=65,
         )
 
-        styles = getSampleStyleSheet()
-
-        # ── Custom Styles ──────────────────────────────────
         section_header = ParagraphStyle(
             "SectionHeader",
             fontSize=13,
@@ -342,7 +338,6 @@ class IssuePDFView(APIView):
 
         story = []
 
-        # ── Document Purpose ───────────────────────────────
         story.append(
             Paragraph(
                 "This document assists on-site municipal workers with issue verification, "
@@ -351,7 +346,6 @@ class IssuePDFView(APIView):
             )
         )
 
-        # ── Status Badge Color ─────────────────────────────
         status_colors = {
             "pending": ("#FEF3C7", "#92400E"),
             "in_progress": ("#DBEAFE", "#1E40AF"),
@@ -362,7 +356,6 @@ class IssuePDFView(APIView):
             issue.status, ("#F3F4F6", "#1F2937")
         )
 
-        # ── Issue Overview Card ────────────────────────────
         story.append(Paragraph("Issue Overview", section_header))
 
         overview_data = [
@@ -412,7 +405,6 @@ class IssuePDFView(APIView):
         story.append(overview_table)
         story.append(Spacer(1, 16))
 
-        # ── Issue Title ────────────────────────────────────
         story.append(Paragraph("Issue Title", section_header))
         title_box = Table(
             [[Paragraph(issue.issue_title, body_text)]], colWidths=[485]
@@ -431,7 +423,6 @@ class IssuePDFView(APIView):
         )
         story.append(title_box)
 
-        # ── Description ────────────────────────────────────
         story.append(Paragraph("Issue Description", section_header))
         desc_box = Table(
             [[Paragraph(issue.issue_description.replace("\n", "<br/>"), body_text)]],
@@ -451,7 +442,6 @@ class IssuePDFView(APIView):
         )
         story.append(desc_box)
 
-        # ── Issue Image ────────────────────────────────────
         story.append(Paragraph("Issue Image (On-site Reference)", section_header))
 
         if issue.image_url:
@@ -516,7 +506,6 @@ class IssuePDFView(APIView):
             )
             story.append(no_img_box)
 
-        # ── Allocation Section ─────────────────────────────
         story.append(Paragraph("Allocated To (Fill On-Site)", section_header))
 
         allocation_box = Table(
@@ -536,7 +525,7 @@ class IssuePDFView(APIView):
         )
         story.append(allocation_box)
 
-        # ── QR Code ────────────────────────────────────────
+        #QR Code
         story.append(Paragraph("Quick Access QR Code", section_header))
 
         qr_url = f"https://reportmitra.in/admin/issues/{issue.tracking_id}"
@@ -574,7 +563,7 @@ class IssuePDFView(APIView):
             )
         )
 
-        # ── Document Authenticity ──────────────────────────
+        #Document Authenticity
         story.append(Spacer(1, 25))
         auth_box = Table(
             [
@@ -608,7 +597,7 @@ class IssuePDFView(APIView):
         )
         story.append(auth_box)
 
-        # ── Build PDF ──────────────────────────────────────
+        #Build PDF
         doc.build(
             story,
             onFirstPage=draw_header_footer,

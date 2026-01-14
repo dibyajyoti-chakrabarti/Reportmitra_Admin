@@ -19,7 +19,6 @@ export function useBackendHealth() {
 
       clearTimeout(timeout);
 
-      // Reachability check (not strict success)
       if (res.status < 500) {
         setStatus("up");
       } else {
@@ -28,7 +27,7 @@ export function useBackendHealth() {
     } catch (err) {
       clearTimeout(timeout);
 
-      // Network error, timeout, connection refused → backend asleep
+      // Network error, timeout, connection refused , all tehse mean that backend is asleep
       setStatus("down");
     }
   }, []);

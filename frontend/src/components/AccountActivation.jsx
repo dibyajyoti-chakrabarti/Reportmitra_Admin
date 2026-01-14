@@ -196,7 +196,6 @@ const AccountActivation = () => {
           )}
         </div>
 
-        {/* Confirmation Modal */}
         {confirmModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">

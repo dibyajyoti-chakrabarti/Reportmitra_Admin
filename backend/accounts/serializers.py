@@ -34,7 +34,6 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ("userid", "full_name", "email", "department", "is_root", "is_staff", "is_active")
 
-# NEW: ActivityLog serializer
 class ActivityLogSerializer(serializers.ModelSerializer):
     performed_by_userid = serializers.CharField(source='performed_by.userid', read_only=True)
     performed_by_name = serializers.CharField(source='performed_by.full_name', read_only=True)

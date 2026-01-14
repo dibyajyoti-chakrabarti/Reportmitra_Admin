@@ -4,7 +4,6 @@ from .views import (
     DeleteUserView, ListUsersView, ToggleUserStatusView, ActivityLogsView
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .authentication import CustomTokenObtainPairView
 
 urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -17,5 +16,4 @@ urlpatterns = [
     path("users/<str:userid>/delete/", DeleteUserView.as_view(), name="delete_user"),
     path("users/<str:userid>/toggle-status/", ToggleUserStatusView.as_view(), name="toggle_user_status"),
     path("activity-logs/", ActivityLogsView.as_view(), name="activity_logs"),
-    # path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
 ]

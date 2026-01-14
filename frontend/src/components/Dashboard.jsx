@@ -1,4 +1,3 @@
-// Dashboard.jsx
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -255,7 +254,6 @@ function Dashboard() {
           </div>
         </aside>
 
-        {/* RESIZER */}
         <div
           className="w-1 cursor-col-resize bg-zinc-800 hover:bg-zinc-600"
           onMouseDown={() => {
@@ -263,7 +261,7 @@ function Dashboard() {
           }}
         />
 
-        {/* MAIN CONTENT */}
+        {/* MAIN */}
         <div className="flex-1 flex flex-col">
           <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6">
             <div className="flex items-center gap-2 text-sm">

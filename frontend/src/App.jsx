@@ -20,7 +20,7 @@ export default function App() {
           {/* Public */}
           <Route path="/" element={<Login />} />
 
-          {/* Protected Dashboard + ALL pages */}
+          {/* Protected Dashboard */}
           <Route
             path="/dashboard"
             element={
