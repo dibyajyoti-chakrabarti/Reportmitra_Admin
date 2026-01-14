@@ -1,4 +1,3 @@
-// Login.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoIcon from "../assets/logo-1.png";
@@ -7,15 +6,8 @@ import ScreenBlocker from "./ScreenBlocker";
 import { log } from "@/utils/logger";
 import { Lock, User, ShieldCheck } from "lucide-react";
 
-/**
- * Login: posts { userid, password } to /api/token/
- * On success: saves access/refresh in localStorage and navigates to /dashboard
- *
- * Low-res/mobile blocking is handled by ScreenBlocker (minWidth = 900).
- */
 
-const MIN_WIDTH = 1024; // same threshold used across the app
-
+const MIN_WIDTH = 1024; 
 export default function Login() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -98,10 +90,8 @@ export default function Login() {
 
   return (
     <>
-      {/* Global screen blocker for small/low-res devices */}
       <ScreenBlocker minWidth={MIN_WIDTH} minHeight={700} allowBypass={false} />
 
-      {/* Powerful admin login UI */}
       <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-4">
         <div className="w-full max-w-lg">
           {/* Logo Section */}

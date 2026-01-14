@@ -1,4 +1,3 @@
-# backend/remote_report/models.py
 from django.db import models
 
 class IssueReportRemote(models.Model):

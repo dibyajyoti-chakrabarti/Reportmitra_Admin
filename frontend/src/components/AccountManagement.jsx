@@ -33,7 +33,7 @@ const AccountManagement = () => {
   };
 
   const generatePassword = () => {
-    const length = Math.floor(Math.random() * 5) + 8; // 8–12
+    const length = Math.floor(Math.random() * 5) + 8;
     const chars =
       "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#$%";
     let pwd = "";
@@ -45,7 +45,6 @@ const AccountManagement = () => {
     return pwd;
   };
 
-  // Fetch logged-in root user
   useEffect(() => {
     let mounted = true;
 
@@ -69,7 +68,6 @@ const AccountManagement = () => {
     };
   }, []);
 
-  // Fetch users when switching to delete tab
   useEffect(() => {
     if (activeTab === "delete") {
       loadUsers();
@@ -89,7 +87,6 @@ const AccountManagement = () => {
   };
 
   useEffect(() => {
-    // Auto-generate password once User ID becomes valid
     if (formData.userId.length === 6 && !formData.password) {
       setFormData((prev) => ({
         ...prev,
@@ -102,13 +99,11 @@ const AccountManagement = () => {
     setError("");
     setFormErrors({});
 
-    // User ID validation
     if (formData.userId.length !== 6) {
       setFormErrors({ userId: "User ID must be exactly 6 characters" });
       return;
     }
 
-    // Email validation
     const emailRegex =
       /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/;
 
@@ -137,7 +132,6 @@ const AccountManagement = () => {
 
       setShowSuccessModal(true);
 
-      // Clear form except department
       setFormData((prev) => ({
         ...prev,
         userId: "",
@@ -154,7 +148,7 @@ const AccountManagement = () => {
     try {
       await deleteUser(userid);
       setDeleteConfirm(null);
-      loadUsers(); // Refresh list
+      loadUsers(); 
     } catch (err) {
       setError(err.message || "Failed to delete user");
     }
@@ -231,7 +225,6 @@ const AccountManagement = () => {
           </div>
         )}
 
-        {/* CREATE TAB */}
         {activeTab === "create" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <p className="text-gray-600 mb-4 text-sm">
@@ -365,7 +358,7 @@ const AccountManagement = () => {
           </div>
         )}
 
-        {/* DELETE TAB */}
+        {/* DELETION */}
         {activeTab === "delete" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <p className="text-gray-600 mb-4 text-sm">
@@ -410,7 +403,6 @@ const AccountManagement = () => {
           </div>
         )}
 
-        {/* Success Modal */}
         {showSuccessModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
@@ -458,7 +450,6 @@ const AccountManagement = () => {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">

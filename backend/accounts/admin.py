@@ -38,9 +38,9 @@ class ActivityLogAdmin(admin.ModelAdmin):
         return False
     
     def has_change_permission(self, request, obj=None):
-        # Prevent editing logs
+        # Prevent editing of logs
         return False
     
     def has_delete_permission(self, request, obj=None):
-        # Only superusers can delete logs
+        # Only superusers can delete the logs
         return request.user.is_superuser

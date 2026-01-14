@@ -39,7 +39,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.userid
 
-# NEW: Activity Log Model
 class ActivityLog(models.Model):
     ACTION_CHOICES = [
         ('create', 'Account Created'),
@@ -51,7 +50,7 @@ class ActivityLog(models.Model):
     ]
     
     performed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='actions_performed')
-    target_user = models.CharField(max_length=6)  # userid of affected user
+    target_user = models.CharField(max_length=6)
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(auto_now_add=True)
     details = models.TextField(blank=True)
