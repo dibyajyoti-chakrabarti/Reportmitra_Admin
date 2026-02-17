@@ -3,12 +3,41 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   getIssueDetail,
   updateIssueStatus,
+  decideIssueAppeal,
   getPresignedUpload,
   resolveIssue,
   downloadIssuePDF,
   getCurrentUser,
 } from "../api";
-import { Camera, ArrowLeft, Download, X, MapPin, Calendar, User, Building2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Camera, ArrowLeft, Download, X, MapPin, Calendar, Building2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+
+const STATUS_META = {
+  pending: {
+    label: "PENDING",
+    badge: "bg-amber-50 text-amber-800 border-amber-200",
+    dot: "bg-amber-500",
+  },
+  in_progress: {
+    label: "IN PROGRESS",
+    badge: "bg-sky-50 text-sky-800 border-sky-200",
+    dot: "bg-sky-500",
+  },
+  escalated: {
+    label: "ESCALATED",
+    badge: "bg-rose-50 text-rose-800 border-rose-200",
+    dot: "bg-rose-500",
+  },
+  resolved: {
+    label: "RESOLVED",
+    badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  rejected: {
+    label: "REJECTED",
+    badge: "bg-gray-100 text-gray-800 border-gray-300",
+    dot: "bg-gray-500",
+  },
+};
 
 const IssueDetail = () => {
 
@@ -21,7 +50,6 @@ const IssueDetail = () => {
 
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [imageErrorDetails, setImageErrorDetails] = useState("");
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
 
@@ -29,6 +57,7 @@ const IssueDetail = () => {
   const [file, setFile] = useState(null);
   const [resolving, setResolving] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [appealDecisionLoading, setAppealDecisionLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -38,9 +67,6 @@ const IssueDetail = () => {
     getIssueDetail(trackingId)
       .then((data) => {
         if (mounted) {
-          console.log("Issue data received:", data);
-          console.log("Image URL:", data.image_url);
-          console.log("Image Presigned URL:", data.image_presigned_url);
           setIssue(data);
         }
       })
@@ -57,20 +83,16 @@ const IssueDetail = () => {
 
   useEffect(() => {
     if (issue?.image_presigned_url) {
-      console.log("Setting up image load for:", issue.image_presigned_url);
       setImageLoading(true);
       setImageError(false);
-      setImageErrorDetails("");
     }
   }, [issue?.image_presigned_url]);
 
   useEffect(() => {
-    if (!showResolveModal) return;
-
     getCurrentUser()
       .then(setCurrentUser)
-      .catch(() => alert("Failed to load user info"));
-  }, [showResolveModal]);
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!showImagePreview) return;
@@ -86,11 +108,8 @@ const IssueDetail = () => {
     setShowImagePreview(true);
   };
 
-  const handleImageError = (e) => {
-    console.error("Image failed to load:", e);
-    console.error("Image src:", e.target.src);
+  const handleImageError = () => {
     setImageError(true);
-    setImageErrorDetails("Failed to load image from S3");
   };
 
   const handleDownloadPDF = async () => {
@@ -114,10 +133,6 @@ const IssueDetail = () => {
   const handleStatusChange = async (newStatus) => {
     if (!issue || newStatus === issue.status) return;
 
-    if (issue.status === "pending" && newStatus !== "in_progress") return;
-    if (issue.status === "in_progress" && newStatus === "pending") return;
-    if (issue.status === "escalated" && newStatus !== "resolved") return;
-
     if (newStatus === "resolved") {
       setShowResolveModal(true);
       return;
@@ -134,6 +149,19 @@ const IssueDetail = () => {
       setIssue((prev) => ({ ...prev, ...updated }));
     } catch (err) {
       alert(err.message || "Failed to update status");
+    }
+  };
+
+  const handleAppealDecision = async (decision) => {
+    if (!issue || appealDecisionLoading) return;
+    setAppealDecisionLoading(true);
+    try {
+      const updated = await decideIssueAppeal(issue.tracking_id, decision);
+      setIssue((prev) => ({ ...prev, ...updated }));
+    } catch (err) {
+      alert(err.message || "Failed to decide appeal");
+    } finally {
+      setAppealDecisionLoading(false);
     }
   };
 
@@ -192,6 +220,11 @@ const IssueDetail = () => {
   );
   
   if (!issue) return null;
+  const statusMeta = STATUS_META[issue.status] || {
+    label: issue.status.replace("_", " ").toUpperCase(),
+    badge: "bg-gray-100 text-gray-800 border-gray-300",
+    dot: "bg-gray-500",
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -203,6 +236,8 @@ const IssueDetail = () => {
         return <AlertCircle className="w-4 h-4" />;
       case "resolved":
         return <CheckCircle2 className="w-4 h-4" />;
+      case "rejected":
+        return <X className="w-4 h-4" />;
       default:
         return null;
     }
@@ -210,39 +245,61 @@ const IssueDetail = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-6">
+      <div className="max-w-6xl mx-auto">
         
         {/* Header Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-7 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{issue.issue_title}</h1>
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 className="text-3xl font-bold tracking-tight text-gray-900">{issue.issue_title}</h1>
                 <span
-                  className={`px-3 py-1 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold ${
-                    issue.status === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : issue.status === "in_progress"
-                      ? "bg-blue-100 text-blue-800"
-                      : issue.status === "escalated"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-green-100 text-green-800"
-                  }`}
+                  className={`px-3 py-1 inline-flex items-center gap-1.5 rounded-full text-xs font-semibold border ${statusMeta.badge}`}
                 >
+                  <span className={`w-2 h-2 rounded-full ${statusMeta.dot}`} />
                   {getStatusIcon(issue.status)}
-                  {issue.status.replace("_", " ").toUpperCase()}
+                  {statusMeta.label}
                 </span>
               </div>
               <p className="text-sm text-gray-500">
                 Tracking ID: <span className="font-mono font-medium text-gray-700">{issue.tracking_id}</span>
               </p>
+              <div className="mt-2 flex items-center flex-wrap gap-2">
+                <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold border border-gray-200">
+                  Appeal: {(issue.appeal_status || "not_appealed").replace("_", " ").toUpperCase()}
+                </span>
+                {typeof issue.trust_score_delta === "number" && (
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                      issue.trust_score_delta > 0
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                        : issue.trust_score_delta < 0
+                        ? "bg-rose-100 text-rose-800 border-rose-200"
+                        : "bg-gray-100 text-gray-700 border-gray-200"
+                    }`}
+                  >
+                    Trust Delta: {issue.trust_score_delta > 0 ? "+" : ""}
+                    {issue.trust_score_delta}
+                  </span>
+                )}
+                {typeof issue.user_trust_score === "number" && (
+                  <span className="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-semibold border border-indigo-200">
+                    User Trust: {issue.user_trust_score}
+                  </span>
+                )}
+                {issue.user_deactivated_until && (
+                  <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold border border-red-200">
+                    Deactivated till {new Date(issue.user_deactivated_until).toLocaleString()}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               <button
                 onClick={handleDownloadPDF}
-                className="flex items-center gap-2 text-sm px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
+                className="flex items-center gap-2 text-sm px-4 py-2.5 bg-black text-white border border-black rounded-lg hover:bg-gray-800 transition-colors font-semibold"
               >
                 <Download className="w-4 h-4" />
                 Export PDF
@@ -250,7 +307,7 @@ const IssueDetail = () => {
 
               <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-sm px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
+                className="flex items-center gap-2 text-sm px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-gray-700"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -258,9 +315,9 @@ const IssueDetail = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 pt-5 border-t border-gray-200">
+            <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <Building2 className="w-5 h-5 text-blue-600" />
               </div>
               <div>
@@ -269,8 +326,8 @@ const IssueDetail = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-50 rounded-lg">
+            <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="p-2 bg-green-100 rounded-lg">
                 <MapPin className="w-5 h-5 text-green-600" />
               </div>
               <div>
@@ -279,8 +336,8 @@ const IssueDetail = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-50 rounded-lg">
+            <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <div className="p-2 bg-violet-100 rounded-lg">
                 <Calendar className="w-5 h-5 text-purple-600" />
               </div>
               <div>
@@ -290,8 +347,8 @@ const IssueDetail = () => {
             </div>
 
             {issue.status !== "resolved" && (
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-orange-50 rounded-lg">
+              <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="p-2 bg-orange-100 rounded-lg">
                   <AlertCircle className="w-5 h-5 text-orange-600" />
                 </div>
                 <div className="flex-1">
@@ -314,6 +371,9 @@ const IssueDetail = () => {
                     <option value="resolved" disabled={!["in_progress", "escalated"].includes(issue.status)}>
                       Resolved
                     </option>
+                    <option value="rejected" disabled={!["pending", "in_progress", "escalated"].includes(issue.status)}>
+                      Rejected (Fake Report)
+                    </option>
                   </select>
                 </div>
               </div>
@@ -321,19 +381,27 @@ const IssueDetail = () => {
           </div>
         </div>
 
-        {/* Debug Info */}
-        {imageError && imageErrorDetails && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-semibold text-red-800 mb-1">Image Load Error</p>
-                <p className="text-sm text-red-700 mb-2">{imageErrorDetails}</p>
-                <div className="text-xs text-red-600 space-y-1">
-                  <div>Image URL: {issue.image_url || 'null'}</div>
-                  <div className="break-all">Presigned URL: {issue.image_presigned_url || 'null'}</div>
-                </div>
-              </div>
+        {issue.status === "rejected" && issue.appeal_status === "pending" && currentUser?.is_root && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-amber-900">Pending Appeal Requires Root Decision</p>
+              <p className="text-sm text-amber-800">Accept restores trust by +13 and reopens this issue. Reject keeps this report finalized.</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleAppealDecision("accepted")}
+                disabled={appealDecisionLoading}
+                className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60"
+              >
+                Accept Appeal
+              </button>
+              <button
+                onClick={() => handleAppealDecision("rejected")}
+                disabled={appealDecisionLoading}
+                className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-700 disabled:opacity-60"
+              >
+                Reject Appeal
+              </button>
             </div>
           </div>
         )}
@@ -343,12 +411,12 @@ const IssueDetail = () => {
           
           {/* Description Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 h-full flex flex-col">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
                 Issue Description
               </h2>
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 flex-1 overflow-y-auto">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 flex-1 overflow-y-auto">
                 <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
                   {issue.issue_description}
                 </p>
@@ -358,12 +426,12 @@ const IssueDetail = () => {
 
           {/* Issue Image Section */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full flex flex-col">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 h-full flex flex-col">
               <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
                 Issue Image
               </h2>
-              <div className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden aspect-[4/3] flex-1">
+              <div className="bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden aspect-[4/3] flex-1">
                 {issue.image_presigned_url && !imageError ? (
                   <>
                     {imageLoading && (
@@ -376,7 +444,6 @@ const IssueDetail = () => {
                       alt="Issue"
                       onClick={() => handleImagePreview(issue.image_presigned_url)}
                       onLoad={() => {
-                        console.log("Image loaded successfully");
                         setImageLoading(false);
                       }}
                       onError={handleImageError}

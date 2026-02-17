@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCurrentUser, createAccount, listUsers, deleteUser } from "../api";
-import { UserPlus, Trash2, AlertCircle } from "lucide-react";
+import { UserPlus, Trash2, AlertCircle, Download, Key, Sparkles } from "lucide-react";
 
 const AccountManagement = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -148,7 +148,7 @@ const AccountManagement = () => {
     try {
       await deleteUser(userid);
       setDeleteConfirm(null);
-      loadUsers(); 
+      loadUsers();
     } catch (err) {
       setError(err.message || "Failed to delete user");
     }
@@ -176,7 +176,7 @@ const AccountManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="h-12 w-12 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading...</p>
@@ -186,76 +186,83 @@ const AccountManagement = () => {
   }
 
   return (
-    <div className="h-[85vh] bg-gray-50 py-6 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-          Account Management
-        </h1>
+    <div className="h-full flex flex-col py-6 px-4">
+      <div className="max-w-4xl mx-auto w-full">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+              <UserPlus className="w-6 h-6 text-indigo-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Account Management</h1>
+              <p className="text-gray-600 text-sm">Create and delete administrative accounts</p>
+            </div>
+          </div>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-4 justify-center">
-          <button
-            onClick={() => setActiveTab("create")}
-            className={`px-5 py-2 rounded-lg font-semibold transition flex items-center gap-2 text-sm ${
-              activeTab === "create"
-                ? "bg-black text-white shadow-md"
-                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-            }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            Create Account
-          </button>
-          <button
-            onClick={() => setActiveTab("delete")}
-            className={`px-5 py-2 rounded-lg font-semibold transition flex items-center gap-2 text-sm ${
-              activeTab === "delete"
-                ? "bg-black text-white shadow-md"
-                : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-300"
-            }`}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Account
-          </button>
+          {/* Tab Navigation */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab("create")}
+              className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 border-2 ${
+                activeTab === "create"
+                  ? "bg-black text-white border-black shadow-md"
+                  : "bg-white text-gray-700 hover:bg-gray-50 border-gray-200"
+              }`}
+            >
+              <UserPlus className="w-5 h-5" />
+              Create Account
+            </button>
+            <button
+              onClick={() => setActiveTab("delete")}
+              className={`px-6 py-3 rounded-xl font-semibold transition flex items-center gap-2 border-2 ${
+                activeTab === "delete"
+                  ? "bg-black text-white border-black shadow-md"
+                  : "bg-white text-gray-700 hover:bg-gray-50 border-gray-200"
+              }`}
+            >
+              <Trash2 className="w-5 h-5" />
+              Delete Account
+            </button>
+          </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-800 text-sm">{error}</p>
+            <p className="text-red-800 font-medium">{error}</p>
           </div>
         )}
 
+        {/* CREATE TAB */}
         {activeTab === "create" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <p className="text-gray-600 mb-4 text-sm">
-              Create new administrative accounts for your department.
-            </p>
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8">
+            <div className="flex items-start gap-3 mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-900 text-sm font-medium">
+                Create new administrative accounts for your department. User ID and password will be auto-generated.
+              </p>
+            </div>
 
-            <div className="space-y-3">
+            <div className="space-y-5">
               {/* User ID */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-bold text-gray-900 mb-2">
                   User ID
                 </label>
-
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <input
                     type="text"
                     value={formData.userId}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        userId: e.target.value
-                          .toUpperCase()
-                          .replace(/[^A-Z0-9]/g, ""),
-                      })
+                      setFormData({ ...formData, userId: e.target.value.toUpperCase() })
                     }
+                    placeholder="6 characters (e.g., TRA001)"
                     maxLength={6}
-                    className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-black ${
+                    className={`flex-1 px-4 py-3 text-sm border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-black font-mono ${
                       formErrors.userId ? "border-red-500" : "border-gray-300"
                     }`}
                   />
-
                   <button
                     type="button"
                     onClick={() =>
@@ -265,21 +272,21 @@ const AccountManagement = () => {
                         password: generatePassword(),
                       })
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold
-                 hover:bg-gray-100 transition"
+                    className="px-5 py-3 border-2 border-gray-300 rounded-xl font-semibold
+                             hover:bg-gray-50 transition flex items-center gap-2"
                   >
+                    <Sparkles className="w-4 h-4" />
                     Generate
                   </button>
                 </div>
-
                 {formErrors.userId && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.userId}</p>
+                  <p className="text-red-500 text-xs mt-2 font-medium">{formErrors.userId}</p>
                 )}
               </div>
 
               {/* Full Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-bold text-gray-900 mb-2">
                   Full Name
                 </label>
                 <input
@@ -288,28 +295,30 @@ const AccountManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, fullName: e.target.value })
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-xl 
+                           focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Enter full name"
                 />
               </div>
 
               {/* Department */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-bold text-gray-900 mb-2">
                   Department
                 </label>
                 <input
                   type="text"
                   value={formData.department}
                   disabled
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg
-                             bg-gray-100 text-gray-500 cursor-not-allowed"
+                  className="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-xl
+                             bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  Email
+                <label className="block text-sm font-bold text-gray-900 mb-2">
+                  Email Address
                 </label>
                 <input
                   type="email"
@@ -317,83 +326,90 @@ const AccountManagement = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-black ${
+                  className={`w-full px-4 py-3 text-sm border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-black ${
                     formErrors.email ? "border-red-500" : "border-gray-300"
                   }`}
+                  placeholder="email@example.com"
                 />
                 {formErrors.email && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+                  <p className="text-red-500 text-xs mt-2 font-medium">{formErrors.email}</p>
                 )}
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  <Key className="w-4 h-4" />
                   Initial Password
                 </label>
-
                 <input
                   type="text"
                   value={formData.password}
                   readOnly
-                  placeholder="Auto-generated"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg
-                   bg-gray-100 text-gray-700
-                   cursor-not-allowed font-mono"
+                  placeholder="Auto-generated when User ID is created"
+                  className="w-full px-4 py-3 text-sm border-2 border-gray-300 rounded-xl
+                           bg-gray-100 text-gray-700 cursor-not-allowed font-mono"
                 />
-
-                <p className="text-xs text-gray-500 mt-1">
-                  This password is auto-generated and cannot be changed.
+                <p className="text-xs text-gray-600 mt-2">
+                  Password is automatically generated and will be provided after account creation.
                 </p>
               </div>
 
               <button
                 onClick={handleCreate}
-                className="bg-black text-white px-5 py-2.5 rounded-lg text-sm
-                           font-semibold hover:bg-gray-800 transition mt-2 w-full shadow-sm"
+                className="w-full bg-black text-white px-6 py-4 rounded-xl
+                         font-bold hover:bg-gray-800 transition shadow-lg hover:shadow-xl
+                         flex items-center justify-center gap-2"
               >
+                <UserPlus className="w-5 h-5" />
                 Create Account
               </button>
             </div>
           </div>
         )}
 
-        {/* DELETION */}
+        {/* DELETE TAB */}
         {activeTab === "delete" && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-            <p className="text-gray-600 mb-4 text-sm">
-              Delete accounts from your department. Root users cannot be deleted.
-            </p>
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8">
+            <div className="flex items-start gap-3 mb-6 bg-red-50 border-2 border-red-200 rounded-xl p-4">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-red-900 text-sm font-medium">
+                Delete accounts from your department. Root users cannot be deleted. This action is permanent.
+              </p>
+            </div>
 
             {loadingUsers ? (
-              <div className="text-center py-8">
-                <div className="h-8 w-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">Loading users...</p>
+              <div className="text-center py-12">
+                <div className="h-10 w-10 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">Loading users...</p>
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">
-                No users found in your department
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <UserPlus className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">No users found in your department</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {users.map((user) => (
                   <div
                     key={user.userid}
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                    className="flex items-center justify-between p-5 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition"
                   >
                     <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">{user.userid}</p>
-                      <p className="text-xs text-gray-700">{user.full_name}</p>
+                      <p className="font-bold text-gray-900 text-lg mb-1">{user.userid}</p>
+                      <p className="text-sm text-gray-700 font-medium">{user.full_name}</p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
 
                     <button
                       onClick={() => setDeleteConfirm(user)}
-                      className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm
+                      className="px-5 py-3 bg-red-600 text-white rounded-xl
                                hover:bg-red-700 transition flex items-center gap-2
-                               font-semibold shadow-sm"
+                               font-bold shadow-md hover:shadow-lg"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-4 h-4" />
                       Delete
                     </button>
                   </div>
@@ -403,15 +419,13 @@ const AccountManagement = () => {
           </div>
         )}
 
+        {/* SUCCESS MODAL */}
         {showSuccessModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-              <div
-                className="mx-auto mb-4 flex items-center justify-center
-                              w-12 h-12 rounded-full bg-green-100"
-              >
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+              <div className="mx-auto mb-6 flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
                 <svg
-                  className="w-6 h-6 text-green-600"
+                  className="w-8 h-8 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -425,16 +439,20 @@ const AccountManagement = () => {
                 </svg>
               </div>
 
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Account created successfully
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Account Created!
               </h2>
+              <p className="text-gray-600 mb-6">
+                The credentials have been generated successfully.
+              </p>
 
               <button
                 onClick={downloadCSV}
-                className="w-full bg-black text-white py-2.5
-                           rounded-lg font-semibold hover:bg-gray-800 transition"
+                className="w-full bg-black text-white py-4 rounded-xl font-bold 
+                         hover:bg-gray-800 transition flex items-center justify-center gap-2 mb-3"
               >
-                Download CSV
+                <Download className="w-5 h-5" />
+                Download Credentials (CSV)
               </button>
 
               <button
@@ -442,7 +460,7 @@ const AccountManagement = () => {
                   setShowSuccessModal(false);
                   setCreatedCreds(null);
                 }}
-                className="mt-3 text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
               >
                 Close
               </button>
@@ -450,36 +468,37 @@ const AccountManagement = () => {
           </div>
         )}
 
+        {/* DELETE CONFIRMATION MODAL */}
         {deleteConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertCircle className="w-6 h-6 text-red-600" />
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-7 h-7 text-red-600" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Confirm Deletion
                 </h2>
               </div>
 
-              <p className="text-gray-700 mb-6">
+              <p className="text-gray-700 mb-6 leading-relaxed">
                 Are you sure you want to delete user{" "}
-                <strong>{deleteConfirm.userid}</strong> (
+                <strong className="text-gray-900">{deleteConfirm.userid}</strong> (
                 {deleteConfirm.full_name})? This action cannot be undone.
               </p>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => handleDelete(deleteConfirm.userid)}
-                  className="flex-1 bg-red-600 text-white py-2.5 rounded-lg
-                           font-semibold hover:bg-red-700 transition"
+                  className="flex-1 bg-red-600 text-white py-3 rounded-xl
+                           font-bold hover:bg-red-700 transition"
                 >
-                  Delete
+                  Delete Account
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-lg
-                           font-semibold hover:bg-gray-300 transition"
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl
+                           font-bold hover:bg-gray-300 transition"
                 >
                   Cancel
                 </button>
