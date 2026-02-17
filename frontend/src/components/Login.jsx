@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoIcon from "../assets/logo-1.png";
-import logoText from "../assets/logo-2.png";
 import adminIllustration from "../assets/admin-secure-access.svg";
 import ScreenBlocker from "./ScreenBlocker";
+import BrandWordmark from "./BrandWordmark";
 import { log } from "@/utils/logger";
 import { Lock, User, ArrowRight } from "lucide-react";
 
@@ -128,8 +128,8 @@ export default function Login() {
           <div className="w-full max-w-md">
             {/* Logo centered at top */}
             <div className="flex items-center justify-center gap-4 mb-8">
-              <img src={logoIcon} alt="NagrikMitra" className="h-14 object-contain" />
-              <img src={logoText} alt="NagrikMitra" className="h-10 object-contain" />
+              <img src={logoIcon} alt="ReportMitra logo" className="h-14 object-contain" />
+              <BrandWordmark />
             </div>
 
             {/* Mobile subtitle for smaller screens */}
@@ -269,7 +269,7 @@ export default function Login() {
 
             {/* Version */}
             <p className="text-center text-gray-400 text-xs mt-4">
-              NagrikMitra Admin System v1.0
+              ReportMitra Admin System v1.0
             </p>
           </div>
         </div>
