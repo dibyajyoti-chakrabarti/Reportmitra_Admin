@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logoIcon from "../assets/logo-1.png";
-import logoText from "../assets/logo-2.png";
+import adminIllustration from "../assets/admin-secure-access.svg";
 import ScreenBlocker from "./ScreenBlocker";
+import BrandWordmark from "./BrandWordmark";
 import { log } from "@/utils/logger";
-import { Lock, User, ShieldCheck } from "lucide-react";
+import { Lock, User, ArrowRight } from "lucide-react";
 
+const MIN_WIDTH = 1024;
 
-const MIN_WIDTH = 1024; 
 export default function Login() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +16,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // If already logged in, go to dashboard
   useEffect(() => {
     const access = localStorage.getItem("rm_access");
     if (access) navigate("/dashboard", { replace: true });
@@ -92,80 +92,113 @@ export default function Login() {
     <>
       <ScreenBlocker minWidth={MIN_WIDTH} minHeight={700} allowBypass={false} />
 
-      <div className="min-h-screen w-full bg-black flex items-center justify-center px-4 py-4">
-        <div className="w-full max-w-lg">
-          {/* Logo Section */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <img src={logoIcon} alt="ReportMitra" className="h-14 object-contain" />
-              <img src={logoText} alt="ReportMitra" className="h-9 object-contain" />
-            </div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="text-xs font-bold tracking-[0.2em] uppercase">
-                Administrator Portal
-              </span>
-            </div>
+      <div className="min-h-screen w-full flex overflow-hidden">
+        {/* LEFT SIDE - Illustration & Branding */}
+        <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-20 left-20 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-white rounded-full blur-3xl"></div>
           </div>
 
-          {/* Login Card */}
-          <div className="bg-white rounded-xl shadow-2xl p-8">
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
-              Admin Login
-            </h1>
-            <p className="text-sm text-gray-600 mb-6 font-medium">
-              Enter your credentials to access the admin dashboard
-            </p>
+          <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+            {/* Illustration */}
+            <div className="flex items-center justify-center flex-1 py-12">
+              <img 
+                src={adminIllustration} 
+                alt="Secure Admin Access" 
+                className="w-full max-w-md object-contain drop-shadow-2xl"
+              />
+            </div>
 
-            <form onSubmit={submit} className="space-y-5">
-              {/* User ID Field */}
+            {/* Bottom text */}
+            <div className="space-y-2">
+              <h2 className="text-white text-2xl font-bold">
+                Administrator Portal
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Secure access to manage civic issues and administrative operations
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE - Login Form */}
+        <div className="flex-1 flex flex-col items-center justify-center bg-white px-6 py-8 overflow-y-auto">
+          <div className="w-full max-w-md">
+            {/* Logo centered at top */}
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <img src={logoIcon} alt="ReportMitra logo" className="h-14 object-contain" />
+              <BrandWordmark />
+            </div>
+
+            {/* Mobile subtitle for smaller screens */}
+            <div className="lg:hidden text-center mb-6">
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                Administrator Portal
+              </p>
+            </div>
+
+            {/* Heading */}
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back
+              </h1>
+              <p className="text-gray-600 text-sm">
+                Sign in to access your admin dashboard
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={submit} className="space-y-4">
+              {/* User ID */}
               <div>
                 <label 
                   htmlFor="userid" 
-                  className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wide"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
                 >
                   User ID
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-gray-500" />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="userid"
                     type="text"
                     value={userId}
                     onChange={(e) => setUserId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-300 rounded-lg 
+                    className="w-full pl-12 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl
                              focus:ring-2 focus:ring-black focus:border-black
                              transition duration-200 text-gray-900 placeholder-gray-400
-                             font-medium"
+                             bg-gray-50 focus:bg-white"
                     placeholder="Enter your user ID"
                     required
                   />
                 </div>
               </div>
 
-              {/* Password Field */}
+              {/* Password */}
               <div>
                 <label 
                   htmlFor="password" 
-                  className="block text-xs font-bold text-gray-800 mb-2 uppercase tracking-wide"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
                 >
                   Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-500" />
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 text-sm border-2 border-gray-300 rounded-lg 
+                    className="w-full pl-12 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl
                              focus:ring-2 focus:ring-black focus:border-black
                              transition duration-200 text-gray-900 placeholder-gray-400
-                             font-medium"
+                             bg-gray-50 focus:bg-white"
                     placeholder="Enter your password"
                     autoComplete="current-password"
                     required
@@ -175,47 +208,70 @@ export default function Login() {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border-l-4 border-red-600 rounded-r-lg p-4">
-                  <p className="text-sm font-semibold text-red-800">{error}</p>
+                <div className="bg-red-50 border-l-4 border-red-500 rounded-r-xl p-4">
+                  <p className="text-sm font-medium text-red-800">{error}</p>
                 </div>
               )}
 
-              {/* Login Button */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-black text-white font-bold text-base py-3 px-6 rounded-lg
-                         hover:bg-gray-900 active:bg-gray-800 transition duration-200 
+                className="w-full bg-black text-white font-semibold text-base py-3 px-6 rounded-xl
+                         hover:bg-gray-800 active:bg-gray-900 transition duration-200 
                          disabled:opacity-50 disabled:cursor-not-allowed
                          focus:outline-none focus:ring-4 focus:ring-gray-300
-                         shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                         shadow-lg hover:shadow-xl flex items-center justify-center gap-3
+                         group"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <>
+                    <svg 
+                      className="animate-spin h-5 w-5" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                    >
+                      <circle 
+                        className="opacity-25" 
+                        cx="12" 
+                        cy="12" 
+                        r="10" 
+                        stroke="currentColor" 
+                        strokeWidth="4"
+                      />
+                      <path 
+                        className="opacity-75" 
+                        fill="currentColor" 
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Authenticating...
-                  </span>
+                  </>
                 ) : (
-                  "Sign In"
+                  <>
+                    Sign In
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </>
                 )}
               </button>
             </form>
 
             {/* Security Notice */}
-            <div className="mt-6 pt-6 border-t-2 border-gray-200">
-              <p className="text-[10px] font-semibold text-gray-500 text-center uppercase tracking-wide">
-                Secure Area • All Access Attempts Are Logged
-              </p>
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                <Lock className="h-3.5 w-3.5" />
+                <span className="font-medium">
+                  Secure Area • All access attempts are logged
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Footer Note */}
-          <p className="text-center text-gray-500 text-xs font-medium mt-4 tracking-wide">
-            ReportMitra Admin System v1.0
-          </p>
+            {/* Version */}
+            <p className="text-center text-gray-400 text-xs mt-4">
+              ReportMitra Admin System v1.0
+            </p>
+          </div>
         </div>
       </div>
     </>

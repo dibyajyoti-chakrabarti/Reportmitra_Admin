@@ -7,12 +7,16 @@ import {
   User,
   History,
   UserPlus,
-  ArrowRightCircle,
   UserCog,
   ScrollText,
+  LogOut,
+  ChevronRight,
 } from "lucide-react";
 
 import ScreenBlocker from "./ScreenBlocker";
+import BrandWordmark from "./BrandWordmark";
+import logoIcon from "../assets/logo-1.png";
+import dashboardIllustration from "../assets/admin-dashboard.svg";
 
 function DashboardHome({ isRoot }) {
   const navigate = useNavigate();
@@ -22,21 +26,25 @@ function DashboardHome({ isRoot }) {
       icon: User,
       label: "View or update your profile",
       route: "profile",
+      color: "bg-blue-50 text-blue-600",
     },
     {
       icon: ListChecks,
       label: "View & manage reported issues",
       route: "issues",
+      color: "bg-green-50 text-green-600",
     },
     {
       icon: AlertTriangle,
       label: "Handle urgent problems immediately",
       route: "urgent",
+      color: "bg-red-50 text-red-600",
     },
     {
       icon: History,
       label: "Track issue history & workflow",
       route: "history",
+      color: "bg-purple-50 text-purple-600",
     },
   ];
 
@@ -45,57 +53,74 @@ function DashboardHome({ isRoot }) {
       icon: UserPlus,
       label: "Create & delete user accounts",
       route: "create",
+      color: "bg-indigo-50 text-indigo-600",
     },
     {
       icon: UserCog,
       label: "Activate & deactivate accounts",
       route: "activation",
+      color: "bg-orange-50 text-orange-600",
     },
     {
       icon: ScrollText,
       label: "View account activity logs",
       route: "logs",
+      color: "bg-gray-50 text-gray-600",
     },
   ];
 
   const features = isRoot ? [...baseFeatures, ...rootFeatures] : baseFeatures;
 
   return (
-    <div className="h-full flex items-center justify-center">
-      <div className="w-full max-w-4xl text-center px-6">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <LayoutDashboard className="w-12 h-12 text-zinc-700" />
-          <h1 className="text-4xl font-semibold">Admin Dashboard</h1>
+    <div className="h-full flex items-center justify-center px-6">
+      <div className="w-full max-w-5xl">
+        {/* Header with Illustration */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={dashboardIllustration} 
+              alt="Admin Dashboard" 
+              className="w-64 h-64 object-contain"
+            />
+          </div>
+          
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Welcome back! Choose a task below to get started
+          </p>
         </div>
 
-        <p className="text-zinc-600 mb-8 text-base">
-          Welcome — choose a task from the left navigation to begin.
-        </p>
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {features.map((item, i) => {
+            const Icon = item.icon;
 
-        <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-10 shadow-sm">
-          <h2 className="text-2xl font-medium mb-6 flex items-center justify-center gap-3">
-            <ArrowRightCircle className="w-6 h-6 text-zinc-700" />
-            Start your work
-          </h2>
+            return (
+              <div
+                key={i}
+                onClick={() => navigate(item.route)}
+                className="group bg-white border-2 border-gray-200 rounded-2xl p-6 
+                         hover:border-black hover:shadow-xl transition-all duration-200 
+                         cursor-pointer"
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl ${item.color} transition-transform group-hover:scale-110`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  
+                  <div className="flex-1">
+                    <p className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-black">
+                      {item.label}
+                    </p>
+                  </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto text-left">
-            {features.map((item, i) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={i}
-                  onClick={() => navigate(item.route)}
-                  className="flex items-start gap-4 p-3 rounded-lg hover:bg-zinc-100 transition cursor-pointer"
-                >
-                  <Icon className="w-8 h-8 text-black mt-1" />
-                  <p className="text-lg text-zinc-700 leading-snug">
-                    {item.label}
-                  </p>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-black group-hover:translate-x-1 transition-all" />
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -106,14 +131,14 @@ function Dashboard() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [sidebarWidth, setSidebarWidth] = useState(300);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
   const isResizingRef = useRef(false);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizingRef.current) return;
       const minWidth = 220;
-      const maxWidth = 420;
+      const maxWidth = 400;
       const newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX));
       setSidebarWidth(newWidth);
     };
@@ -170,16 +195,16 @@ function Dashboard() {
   }, []);
 
   const navItems = [
-    { label: "Dashboard", to: "" },
-    { label: "Profile", to: "profile" },
-    { label: "Issue List", to: "issues" },
-    { label: "Urgent Issues", to: "urgent" },
-    { label: "Issue History", to: "history" },
+    { label: "Dashboard", to: "", icon: LayoutDashboard },
+    { label: "Profile", to: "profile", icon: User },
+    { label: "Issue List", to: "issues", icon: ListChecks },
+    { label: "Urgent Issues", to: "urgent", icon: AlertTriangle },
+    { label: "Issue History", to: "history", icon: History },
     ...(user.isRoot
       ? [
-          { label: "Account Creation & Deletion", to: "create" },
-          { label: "Account Activation & Deactivation", to: "activation" },
-          { label: "Account Logs", to: "logs" },
+          { label: "Account Management", to: "create", icon: UserPlus },
+          { label: "Account Activation", to: "activation", icon: UserCog },
+          { label: "Activity Logs", to: "logs", icon: ScrollText },
         ]
       : []),
   ];
@@ -195,106 +220,132 @@ function Dashboard() {
       if (item.to === "") {
         return location.pathname === "/dashboard";
       }
-      return location.pathname.endsWith(item.to);
+      return location.pathname.includes(item.to);
     })?.label || "Dashboard";
 
   return (
     <>
       <ScreenBlocker minWidth={1024} minHeight={700} allowBypass={false} />
-      <div className="min-h-screen overflow-hidden bg-black text-white flex">
+      <div className="min-h-screen overflow-hidden bg-gray-50 flex">
         {/* SIDEBAR */}
         <aside
-          className="bg-zinc-950 border-r border-zinc-800 flex flex-col"
+          className="bg-white border-r border-gray-200 flex flex-col shadow-sm"
           style={{ width: sidebarWidth }}
         >
-          <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
-            <div className="space-y-1.5">
-              <p className="text-sm font-semibold tracking-wide">
-                {loadingUser ? "..." : user.userId || "—"}
+          {/* Logo Section */}
+          <div className="px-6 py-6 border-b border-gray-200">
+            <div className="mb-4 flex items-center gap-3">
+              <img src={logoIcon} alt="ReportMitra logo" className="h-10 w-10 object-contain" />
+              <BrandWordmark />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-gray-900">
+                {loadingUser ? "Loading..." : user.fullName || user.userId || "—"}
               </p>
-              <p className="text-sm font-semibold uppercase">
-                {loadingUser ? "…" : user.fullName || user.userId || "—"}
+              <p className="text-xs text-gray-500 uppercase tracking-wide">
+                {loadingUser ? "" : user.department || "Admin"}
               </p>
-              <p className="text-xs text-zinc-400 uppercase tracking-wide">
-                {loadingUser ? "" : user.department || ""}
-              </p>
-
-              <p className="mt-3 text-[0.7rem] text-zinc-400">
-                ReportMitra Admin Panel
-              </p>
+              {user.isRoot && (
+                <span className="inline-block px-2 py-0.5 bg-black text-white text-[10px] font-bold rounded uppercase tracking-wide mt-1">
+                  Root Admin
+                </span>
+              )}
             </div>
           </div>
 
-          <nav className="flex-1 px-3 py-4 space-y-1 text-base overflow-y-auto">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to === "" ? "/dashboard" : item.to}
-                className={({ isActive }) =>
-                  [
-                    "block w-full px-5 py-4 border-b border-zinc-800 text-left font-semibold",
-                    "hover:bg-zinc-900 transition-colors",
-                    isActive ? "bg-zinc-900" : "bg-zinc-950",
-                  ].join(" ")
-                }
-                end
-              >
-                {item.label.toUpperCase()}
-              </NavLink>
-            ))}
+          {/* Navigation */}
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to === "" ? "/dashboard" : item.to}
+                  className={({ isActive }) =>
+                    [
+                      "flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-black text-white shadow-md"
+                        : "text-gray-700 hover:bg-gray-100",
+                    ].join(" ")
+                  }
+                  end
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <span className="flex-1">{item.label}</span>
+                      {isActive && <ChevronRight className="h-4 w-4" />}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
           </nav>
 
-          <div className="px-6 py-6 border-t border-zinc-800">
+          {/* Logout Button */}
+          <div className="px-6 py-6 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="w-full py-3 text-sm font-medium rounded-md border border-zinc-600 bg-zinc-950 text-zinc-100 hover:bg-zinc-900 hover:border-zinc-400 transition"
+              className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold 
+                       rounded-lg border-2 border-gray-200 text-gray-700 
+                       hover:border-red-500 hover:text-red-600 hover:bg-red-50 
+                       transition-all"
             >
+              <LogOut className="h-4 w-4" />
               Logout
             </button>
           </div>
         </aside>
 
+        {/* Resize Handle */}
         <div
-          className="w-1 cursor-col-resize bg-zinc-800 hover:bg-zinc-600"
+          className="w-1 cursor-col-resize bg-gray-200 hover:bg-gray-400 transition-colors"
           onMouseDown={() => {
             isResizingRef.current = true;
           }}
         />
 
-        {/* MAIN */}
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-zinc-500">ReportMitra</span>
-              <span className="text-zinc-600">/</span>
-              <span className="font-semibold">{activePage}</span>
+        {/* MAIN CONTENT */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shadow-sm">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold text-gray-900">{activePage}</h2>
             </div>
-            <span className="text-xs text-zinc-500">
-              Signed in as {loadingUser ? "..." : user.userId}
-            </span>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Signed in as</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {loadingUser ? "..." : user.userId}
+                </p>
+              </div>
+            </div>
           </header>
 
-          <main className="flex-1 h-full bg-white text-black p-6 lg:p-8 overflow-hidden">
-            <div className="h-full overflow-auto flex justify-center">
-              <div className="w-full max-w-7xl h-[85vh]">
-                {location.pathname === "/dashboard" ? (
-                  <DashboardHome isRoot={user.isRoot} />
-                ) : (location.pathname.endsWith("/create") ||
-                    location.pathname.endsWith("/activation") ||
-                    location.pathname.endsWith("/logs")) &&
-                  !user.isRoot ? (
-                  <div className="h-full flex items-center justify-center text-black">
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-                      <p className="text-gray-600">
-                        You do not have permission to access this page.
-                      </p>
+          {/* Main Content Area */}
+          <main className="flex-1 bg-gray-50 p-8 overflow-auto">
+            <div className="h-full">
+              {location.pathname === "/dashboard" ? (
+                <DashboardHome isRoot={user.isRoot} />
+              ) : (location.pathname.endsWith("/create") ||
+                  location.pathname.endsWith("/activation") ||
+                  location.pathname.endsWith("/logs")) &&
+                !user.isRoot ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center bg-white rounded-2xl border-2 border-gray-200 p-12 max-w-md">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="w-8 h-8 text-red-600" />
                     </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+                    <p className="text-gray-600">
+                      You do not have permission to access this page. Root admin privileges required.
+                    </p>
                   </div>
-                ) : (
-                  <Outlet context={{ user }} />
-                )}
-              </div>
+                </div>
+              ) : (
+                <Outlet context={{ user }} />
+              )}
             </div>
           </main>
         </div>

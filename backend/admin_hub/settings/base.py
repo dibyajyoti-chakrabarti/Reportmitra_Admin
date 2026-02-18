@@ -11,6 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Applications
 INSTALLED_APPS = [
@@ -26,7 +27,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "storages",
 
-    "accounts",
+    "accounts.apps.AccountsConfig",
     "remote_report",
 ]
 ROOT_URLCONF = "admin_hub.urls"
@@ -42,6 +43,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+    "accounts.middleware.AutoDeactivationMiddleware",
 ]
 
 ROOT_URLCONF = "admin_hub.urls"
@@ -75,10 +78,23 @@ REST_FRAMEWORK = {
     ),
 }
 
+CACHES = {
+       'default': {
+           'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+           'LOCATION': 'auto-reactivation',
+       }
+   }
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+ADMIN_AUTO_DEACTIVATION = {
+    'MIN_DISLIKES': 20,
+    'DISLIKE_RATIO_THRESHOLD': 0.60,
+    'DEACTIVATION_DURATION_HOURS': 24,
 }
 
 # Database
@@ -115,3 +131,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+
+# Email alerts
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@example.com")
+ADMIN_ALERT_EMAIL = os.environ.get("ADMIN_ALERT_EMAIL", "admin@example.com")
